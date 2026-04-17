@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gaddy Pro Live Voice Room</title>
+    <title>Gaddy Pro Live Voice</title>
     
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.7.3.js"></script>
 
@@ -20,50 +20,26 @@
 
     <style>
         :root { --gold: #ffcc00; --bg: #050505; }
-        body { 
-            background-color: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            min-height: 100vh; margin: 0; overflow: hidden;
-        }
-        .room-title { color: var(--gold); margin-bottom: 20px; text-shadow: 0 0 15px rgba(255,204,0,0.5); font-size: 22px; }
-        
+        body { background-color: var(--bg); color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .room-title { color: var(--gold); margin-bottom: 20px; text-shadow: 0 0 10px var(--gold); }
         .seat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
-
         .seat {
             width: 65px; height: 65px; background: #1a1a1a; border: 2px solid #333;
             border-radius: 50%; display: flex; flex-direction: column; align-items: center;
-            justify-content: center; cursor: pointer; position: relative; transition: 0.3s;
+            justify-content: center; cursor: pointer; transition: 0.3s;
         }
-
-        /* কথা বললে ঝলমল করার অ্যানিমেশন */
         @keyframes speakingGlow {
             0% { box-shadow: 0 0 5px var(--gold); transform: scale(1); }
-            50% { box-shadow: 0 0 25px var(--gold); transform: scale(1.05); }
+            50% { box-shadow: 0 0 20px var(--gold); transform: scale(1.05); }
             100% { box-shadow: 0 0 5px var(--gold); transform: scale(1); }
         }
-
-        .active-glow {
-            animation: speakingGlow 0.8s infinite ease-in-out;
-            border-color: var(--gold) !important;
-        }
-
+        .active-glow { animation: speakingGlow 0.8s infinite ease-in-out; border-color: var(--gold) !important; }
         .seat-icon { font-size: 24px; }
-        .seat-num { font-size: 10px; color: #777; margin-top: 2px; }
-
-        /* মিউট/আনমিউট বাটন */
-        #controls { position: fixed; bottom: 30px; right: 20px; display: none; z-index: 100; }
-        .mute-btn {
-            background: #ff4444; color: white; border: none; width: 60px; height: 60px;
-            border-radius: 50%; font-size: 24px; cursor: pointer; box-shadow: 0 0 15px rgba(0,0,0,0.5);
-        }
+        .seat-num { font-size: 10px; color: #777; }
+        #controls { position: fixed; bottom: 30px; right: 20px; display: none; }
+        .mute-btn { background: #ff4444; color: white; border: none; width: 60px; height: 60px; border-radius: 50%; font-size: 24px; cursor: pointer; }
         .unmute-active { background: #00ff00; }
-
-        /* পপ-আপ */
-        #confirm-box {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
-            background: #1a1a1a; padding: 25px; border-radius: 20px; border: 2px solid var(--gold);
-            text-align: center; z-index: 1000; transition: 0.3s;
-        }
+        #confirm-box { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); background: #1a1a1a; padding: 25px; border-radius: 20px; border: 2px solid var(--gold); text-align: center; z-index: 1000; transition: 0.3s; }
         #confirm-box.show { transform: translate(-50%, -50%) scale(1); }
         .btn-join { background: #007bff; color: white; border: none; padding: 12px 30px; border-radius: 10px; margin: 10px; font-weight: bold; cursor: pointer; }
         .btn-cancel { background: #333; color: #ccc; border: none; padding: 10px 25px; border-radius: 10px; cursor: pointer; }
@@ -72,30 +48,27 @@
 </head>
 <body>
 
-    <h2 class="room-title">Gaddy Pro Live Voice Room</h2>
-    <div id="status" style="margin-bottom: 20px; color: #aaa; font-size: 14px;">সিটে ক্লিক করে জয়েন করুন</div>
+    <h2 class="room-title">Gaddy Pro Live</h2>
+    <div id="status" style="margin-bottom: 20px; color: #aaa;">সিটে ক্লিক করুন</div>
 
     <div class="seat-grid" id="seatGrid"></div>
 
-    <div id="controls">
-        <button id="muteBtn" class="mute-btn" onclick="toggleMute()">🎙️</button>
-    </div>
+    <div id="controls"><button id="muteBtn" class="mute-btn" onclick="toggleMute()">🎙️</button></div>
 
     <div id="overlay"></div>
     <div id="confirm-box">
-        <h3 style="color:white;">আপনি কি মাইকে জয়েন করতে চান?</h3>
+        <h3>আপনি কি মাইকে জয়েন করতে চান?</h3>
         <button class="btn-join" onclick="processJoin()">হ্যাঁ, জয়েন হবো</button><br>
         <button class="btn-cancel" onclick="hidePopup()">ক্যানসেল</button>
     </div>
 
     <script>
-        const APP_ID = "A433a2443cf4427ab18baa75f3904f2f"; // আপনার দেওয়া আইডি
+        const APP_ID = "A433a2443cf4427ab18baa75f3904f2f"; 
         let client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
         let localTracks = { audioTrack: null };
         let selectedElement = null;
         let isMuted = false;
 
-        // সিট তৈরি
         const grid = document.getElementById('seatGrid');
         for (let i = 1; i <= 10; i++) {
             const seat = document.createElement('div');
@@ -118,25 +91,27 @@
 
         async function processJoin() {
             hidePopup();
-            document.getElementById('status').innerText = "কানেক্টিং...";
+            document.getElementById('status').innerText = "অনুমতি চাওয়া হচ্ছে...";
+            
             try {
-                // Agora সার্ভারে জয়েন
-                await client.join(APP_ID, "main-room", null);
-                localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
-                    echoCancellation: true, noiseSuppression: true
-                });
+                // ব্রাউজারের মাইক্রোফোন সরাসরি রিকোয়েস্ট করা (এটিই পপ-আপ আনবে)
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                // Agora তে জয়েন
+                await client.join(APP_ID, "test-room", null);
+                localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
                 await client.publish([localTracks.audioTrack]);
 
                 isMuted = false;
                 selectedElement.classList.add('active-glow');
                 document.getElementById('controls').style.display = 'block';
                 document.getElementById('muteBtn').classList.add('unmute-active');
-                document.getElementById('status').innerText = "● আপনি এখন লাইভে আছেন";
+                document.getElementById('status').innerText = "● লাইভ চালু আছে";
                 document.getElementById('status').style.color = "#00ff00";
             } catch (err) {
                 console.error(err);
-                alert("ভুল: মাইক পারমিশন দিন এবং Chrome ব্যবহার করুন।");
-                document.getElementById('status').innerText = "সংযোগ ব্যর্থ!";
+                alert("পারমিশন উইন্ডো আসেনি? ১. ক্রোমের উপরে লক আইকনে ক্লিক করুন। ২. সাইট সেটিংস এ গিয়ে মাইক্রোফোন 'Allow' করুন।");
+                document.getElementById('status').innerText = "ভুল হয়েছে!";
             }
         }
 
@@ -144,15 +119,12 @@
             if (!localTracks.audioTrack) return;
             isMuted = !isMuted;
             localTracks.audioTrack.setEnabled(!isMuted);
-            
             const btn = document.getElementById('muteBtn');
             if (isMuted) {
-                btn.innerText = "🔇";
-                btn.classList.remove('unmute-active');
+                btn.innerText = "🔇"; btn.classList.remove('unmute-active');
                 selectedElement.classList.remove('active-glow');
             } else {
-                btn.innerText = "🎙️";
-                btn.classList.add('unmute-active');
+                btn.innerText = "🎙️"; btn.classList.add('unmute-active');
                 selectedElement.classList.add('active-glow');
             }
         }
