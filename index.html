@@ -3,36 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gaddy Pro Live Chat Room</title>
+    <title>Gaddy Pro Live Voice</title>
     
     <script>
-        var isInsideApp = /FBAN|FBAV|Instagram|IMO|WhatsApp/i.test(navigator.userAgent);
-        if (isInsideApp) {
-            alert("সতর্কবার্তা: IMO/WhatsApp-এ মাইক্রোফোন কাজ করবে না। সেরা অভিজ্ঞতার জন্য লিঙ্কটি কপি করে Chrome ব্রাউজারে ব্যবহার করুন।");
-        }
+        // আইএমও বা হোয়াটসঅ্যাপ থেকে সরাসরি ক্রোমে রিডাইরেক্ট করার ট্রিক
+        (function() {
+            var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+            var isInsideApp = /FBAN|FBAV|Instagram|IMO|WhatsApp/i.test(userAgent);
+
+            if (isInsideApp) {
+                // এটি ফোনের সিস্টেমকে কমান্ড পাঠাবে সরাসরি ক্রোম ব্রাউজার খোলার জন্য
+                var currentUrl = window.location.href;
+                var chromeUrl = "intent://" + currentUrl.replace(/^https?:\/\//, "") + "#Intent;scheme=https;package=com.android.chrome;end";
+                
+                window.location.href = chromeUrl;
+                
+                // যদি ২ সেকেন্ডের মধ্যে কাজ না হয়, তবে নিচের নোটিশটি দেখাবে
+                setTimeout(function() {
+                    document.body.innerHTML = `
+                        <div style="background:#000; color:#fff; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-family:sans-serif;">
+                            <h2 style="color:#00ff00;">লিঙ্কটি ক্রোমে খুলুন</h2>
+                            <p>আইএমও-তে মাইক্রোফোন কাজ করবে না।</p>
+                            <a href="${currentUrl}" target="_blank" style="padding:15px 30px; background:#00ff00; color:#000; text-decoration:none; border-radius:10px; font-weight:bold;">এখানে ক্লিক করে ওপেন করুন</a>
+                        </div>
+                    `;
+                }, 2000);
+            }
+        })();
     </script>
 
     <style>
-        body {
-            background-color: #0b0b0b;
-            color: white;
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
-        #error-msg { color: #ff4444; margin-bottom: 20px; text-align: center; }
+        body { background-color: #0b0b0b; color: white; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        #error-msg { color: #ff4444; margin-bottom: 20px; text-align: center; min-height: 20px; }
         .seat-container { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; }
-        .seat {
-            width: 70px; height: 70px; border-radius: 50%; background: #1a1a1a;
-            border: 2px solid #333; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; cursor: pointer;
-        }
-        .seat.active { border-color: #00ff00; box-shadow: 0 0 10px #00ff00; }
-        .seat-icon { font-size: 24px; }
+        .seat { width: 75px; height: 75px; border-radius: 50%; background: #1a1a1a; border: 2px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; }
+        .seat.active { border-color: #00ff00; box-shadow: 0 0 15px #00ff00; }
+        .seat-icon { font-size: 26px; }
         .seat-label { font-size: 12px; margin-top: 5px; color: #888; }
     </style>
 </head>
@@ -66,20 +72,16 @@
     <script>
         async function joinSeat(seatNumber, element) {
             const errorDisplay = document.getElementById('error-msg');
-            errorDisplay.innerText = "মাইক সংযোগ করা হচ্ছে...";
-            errorDisplay.style.color = "yellow";
-
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } 
                 });
-
-                errorDisplay.innerText = "সফলভাবে সিট " + seatNumber + "-এ যুক্ত হয়েছেন!";
+                errorDisplay.innerText = "সিট " + seatNumber + "-এ যুক্ত হয়েছেন!";
                 errorDisplay.style.color = "#00ff00";
                 document.querySelectorAll('.seat').forEach(s => s.classList.remove('active'));
                 element.classList.add('active');
             } catch (err) {
-                errorDisplay.innerText = "ভুল: ব্রাউজার থেকে মাইক্রোফোন অনুমতি দিন (Chrome ব্যবহার করুন)।";
+                errorDisplay.innerText = "ভুল: মাইক্রোফোন পারমিশন দিন।";
                 errorDisplay.style.color = "#ff4444";
             }
         }
