@@ -3,86 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gaddy Pro Live Voice</title>
+    <title>Gaddy Pro Live Voice Room</title>
     
-    <script>
-        // আইএমও বা হোয়াটসঅ্যাপ থেকে সরাসরি ক্রোমে রিডাইরেক্ট করার ট্রিক
-        (function() {
-            var userAgent = navigator.userAgent || navigator.vendor || window.opera;
-            var isInsideApp = /FBAN|FBAV|Instagram|IMO|WhatsApp/i.test(userAgent);
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.7.3.js"></script>
 
-            if (isInsideApp) {
-                // এটি ফোনের সিস্টেমকে কমান্ড পাঠাবে সরাসরি ক্রোম ব্রাউজার খোলার জন্য
-                var currentUrl = window.location.href;
-                var chromeUrl = "intent://" + currentUrl.replace(/^https?:\/\//, "") + "#Intent;scheme=https;package=com.android.chrome;end";
-                
-                window.location.href = chromeUrl;
-                
-                // যদি ২ সেকেন্ডের মধ্যে কাজ না হয়, তবে নিচের নোটিশটি দেখাবে
-                setTimeout(function() {
-                    document.body.innerHTML = `
-                        <div style="background:#000; color:#fff; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-family:sans-serif;">
-                            <h2 style="color:#00ff00;">লিঙ্কটি ক্রোমে খুলুন</h2>
-                            <p>আইএমও-তে মাইক্রোফোন কাজ করবে না।</p>
-                            <a href="${currentUrl}" target="_blank" style="padding:15px 30px; background:#00ff00; color:#000; text-decoration:none; border-radius:10px; font-weight:bold;">এখানে ক্লিক করে ওপেন করুন</a>
-                        </div>
-                    `;
-                }, 2000);
+    <script>
+        // IMO/WhatsApp থেকে সরাসরি Chrome ওপেন করার ট্রিক
+        (function() {
+            var ua = navigator.userAgent || navigator.vendor || window.opera;
+            if (/FBAN|FBAV|Instagram|IMO|WhatsApp/i.test(ua)) {
+                var currentUrl = window.location.href.replace(/^https?:\/\//, "");
+                window.location.href = "intent://" + currentUrl + "#Intent;scheme=https;package=com.android.chrome;end";
             }
         })();
     </script>
 
     <style>
-        body { background-color: #0b0b0b; color: white; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        #error-msg { color: #ff4444; margin-bottom: 20px; text-align: center; min-height: 20px; }
-        .seat-container { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; }
-        .seat { width: 75px; height: 75px; border-radius: 50%; background: #1a1a1a; border: 2px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; }
-        .seat.active { border-color: #00ff00; box-shadow: 0 0 15px #00ff00; }
-        .seat-icon { font-size: 26px; }
-        .seat-label { font-size: 12px; margin-top: 5px; color: #888; }
+        :root { --gold: #ffcc00; --bg: #050505; }
+        body { 
+            background-color: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            min-height: 100vh; margin: 0; overflow: hidden;
+        }
+        .room-title { color: var(--gold); margin-bottom: 20px; text-shadow: 0 0 15px rgba(255,204,0,0.5); font-size: 22px; }
+        
+        .seat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
+
+        .seat {
+            width: 65px; height: 65px; background: #1a1a1a; border: 2px solid #333;
+            border-radius: 50%; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; cursor: pointer; position: relative; transition: 0.3s;
+        }
+
+        /* কথা বললে ঝলমল করার অ্যানিমেশন */
+        @keyframes speakingGlow {
+            0% { box-shadow: 0 0 5px var(--gold); transform: scale(1); }
+            50% { box-shadow: 0 0 25px var(--gold); transform: scale(1.05); }
+            100% { box-shadow: 0 0 5px var(--gold); transform: scale(1); }
+        }
+
+        .active-glow {
+            animation: speakingGlow 0.8s infinite ease-in-out;
+            border-color: var(--gold) !important;
+        }
+
+        .seat-icon { font-size: 24px; }
+        .seat-num { font-size: 10px; color: #777; margin-top: 2px; }
+
+        /* মিউট/আনমিউট বাটন */
+        #controls { position: fixed; bottom: 30px; right: 20px; display: none; z-index: 100; }
+        .mute-btn {
+            background: #ff4444; color: white; border: none; width: 60px; height: 60px;
+            border-radius: 50%; font-size: 24px; cursor: pointer; box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+        .unmute-active { background: #00ff00; }
+
+        /* পপ-আপ */
+        #confirm-box {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            background: #1a1a1a; padding: 25px; border-radius: 20px; border: 2px solid var(--gold);
+            text-align: center; z-index: 1000; transition: 0.3s;
+        }
+        #confirm-box.show { transform: translate(-50%, -50%) scale(1); }
+        .btn-join { background: #007bff; color: white; border: none; padding: 12px 30px; border-radius: 10px; margin: 10px; font-weight: bold; cursor: pointer; }
+        .btn-cancel { background: #333; color: #ccc; border: none; padding: 10px 25px; border-radius: 10px; cursor: pointer; }
+        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 999; }
     </style>
 </head>
 <body>
 
-    <div id="error-msg"></div>
+    <h2 class="room-title">Gaddy Pro Live Voice Room</h2>
+    <div id="status" style="margin-bottom: 20px; color: #aaa; font-size: 14px;">সিটে ক্লিক করে জয়েন করুন</div>
 
-    <div class="seat-container">
-        <div class="seat" onclick="joinSeat(1, this)">
-            <div class="seat-icon">🎙️</div>
-            <div class="seat-label">হোস্ট</div>
-        </div>
-        <div class="seat" onclick="joinSeat(2, this)">
-            <div class="seat-icon">🛋️</div>
-            <div class="seat-label">2</div>
-        </div>
-        <div class="seat" onclick="joinSeat(3, this)">
-            <div class="seat-icon">🛋️</div>
-            <div class="seat-label">3</div>
-        </div>
-        <div class="seat" onclick="joinSeat(4, this)">
-            <div class="seat-icon">🛋️</div>
-            <div class="seat-label">4</div>
-        </div>
-        <div class="seat" onclick="joinSeat(5, this)">
-            <div class="seat-icon">🛋️</div>
-            <div class="seat-label">5</div>
-        </div>
+    <div class="seat-grid" id="seatGrid"></div>
+
+    <div id="controls">
+        <button id="muteBtn" class="mute-btn" onclick="toggleMute()">🎙️</button>
+    </div>
+
+    <div id="overlay"></div>
+    <div id="confirm-box">
+        <h3 style="color:white;">আপনি কি মাইকে জয়েন করতে চান?</h3>
+        <button class="btn-join" onclick="processJoin()">হ্যাঁ, জয়েন হবো</button><br>
+        <button class="btn-cancel" onclick="hidePopup()">ক্যানসেল</button>
     </div>
 
     <script>
-        async function joinSeat(seatNumber, element) {
-            const errorDisplay = document.getElementById('error-msg');
+        const APP_ID = "A433a2443cf4427ab18baa75f3904f2f"; // আপনার দেওয়া আইডি
+        let client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+        let localTracks = { audioTrack: null };
+        let selectedElement = null;
+        let isMuted = false;
+
+        // সিট তৈরি
+        const grid = document.getElementById('seatGrid');
+        for (let i = 1; i <= 10; i++) {
+            const seat = document.createElement('div');
+            seat.className = 'seat';
+            seat.innerHTML = `<div class="seat-icon">${i === 1 ? '🎙️' : '🛋️'}</div><div class="seat-num">${i === 1 ? 'HOST' : i}</div>`;
+            seat.onclick = () => showPopup(seat);
+            grid.appendChild(seat);
+        }
+
+        function showPopup(el) {
+            selectedElement = el;
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('confirm-box').classList.add('show');
+        }
+
+        function hidePopup() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('confirm-box').classList.remove('show');
+        }
+
+        async function processJoin() {
+            hidePopup();
+            document.getElementById('status').innerText = "কানেক্টিং...";
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } 
+                // Agora সার্ভারে জয়েন
+                await client.join(APP_ID, "main-room", null);
+                localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
+                    echoCancellation: true, noiseSuppression: true
                 });
-                errorDisplay.innerText = "সিট " + seatNumber + "-এ যুক্ত হয়েছেন!";
-                errorDisplay.style.color = "#00ff00";
-                document.querySelectorAll('.seat').forEach(s => s.classList.remove('active'));
-                element.classList.add('active');
+                await client.publish([localTracks.audioTrack]);
+
+                isMuted = false;
+                selectedElement.classList.add('active-glow');
+                document.getElementById('controls').style.display = 'block';
+                document.getElementById('muteBtn').classList.add('unmute-active');
+                document.getElementById('status').innerText = "● আপনি এখন লাইভে আছেন";
+                document.getElementById('status').style.color = "#00ff00";
             } catch (err) {
-                errorDisplay.innerText = "ভুল: মাইক্রোফোন পারমিশন দিন।";
-                errorDisplay.style.color = "#ff4444";
+                console.error(err);
+                alert("ভুল: মাইক পারমিশন দিন এবং Chrome ব্যবহার করুন।");
+                document.getElementById('status').innerText = "সংযোগ ব্যর্থ!";
+            }
+        }
+
+        function toggleMute() {
+            if (!localTracks.audioTrack) return;
+            isMuted = !isMuted;
+            localTracks.audioTrack.setEnabled(!isMuted);
+            
+            const btn = document.getElementById('muteBtn');
+            if (isMuted) {
+                btn.innerText = "🔇";
+                btn.classList.remove('unmute-active');
+                selectedElement.classList.remove('active-glow');
+            } else {
+                btn.innerText = "🎙️";
+                btn.classList.add('unmute-active');
+                selectedElement.classList.add('active-glow');
             }
         }
     </script>
