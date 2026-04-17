@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gaddy Pro Live Voice</title>
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.18.0.js"></script>
+    <style>
+        body {
+            background-color: #0f0f0f;
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .scroll-container {
+            display: flex;
+            overflow-x: auto;
+            padding: 10px 15px;
+            gap: 12px;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .scroll-container::-webkit-scrollbar { display: none; }
+
+        .seat-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .seat {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #1e1e1e;
+            border: 1.5px solid #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+
+        .seat.active-mic {
+            border-color: #00FF7F;
+            box-shadow: 0 0 10px #00FF7F;
+        }
+
+        .seat:active { transform: scale(0.9); }
+        .host-seat { border-color: #00FF7F; border-width: 2px; }
+        .label { margin-top: 4px; font-size: 12px; color: #888; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .modal-content {
+            background: #252525;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            width: 220px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-mic { background-color: #00FF7F; color: #000; }
+        .btn-cancel { background-color: #333; color: white; }
+        #status-msg { position: fixed; top: 20px; width: 100%; text-align: center; color: #00FF7F; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <div id="status-msg">প্রস্তুত</div>
+
+    <div class="scroll-container" id="seatContainer"></div>
+
+    <div class="modal-overlay" id="micModal">
+        <div class="modal-content">
+            <h4 id="modalTitle" style="margin: 0 0 15px 0; color: #fff;">সিট নম্বর</h4>
+            <button class="btn btn-mic" onclick="confirmMic()">🎤 মাইক চালু করুন</button>
+            <button class="btn btn-cancel" onclick="closeModal()">ক্যানসেল</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Agora Settings ---
+        const APP_ID = "A433a2443cf4427ab18baa75f3904f2f"; // আপনার আইডি বসানো হয়েছে
+        const CHANNEL = "gaddy_room";
+        const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+        let localAudioTrack = null;
+
+        const container = document.getElementById('seatContainer');
+        const modal = document.getElementById('micModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const statusMsg = document.getElementById('status-msg');
+        let currentSeat = null;
+
+        // ১০টি সিট তৈরি
+        for (let i = 1; i <= 10; i++) {
+            const isHost = i === 1;
+            const seatHTML = `
+                <div class="seat-wrapper" onclick="openMenu(${i})">
+                    <div class="seat ${isHost ? 'host-seat' : ''}" id="seat-icon-${i}">
+                        ${isHost ? '🎙️' : '🛋️'}
+                    </div>
+                    <div class="label">${isHost ? 'হোস্ট' : i}</div>
+                </div>
+            `;
+            container.innerHTML += seatHTML;
+        }
+
+        function openMenu(num) {
+            currentSeat = num;
+            modalTitle.innerText = num === 1 ? "হোস্ট অপশন" : "সিট নম্বর " + num;
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() { modal.style.display = 'none'; }
+
+        async function confirmMic() {
+            closeModal();
+            statusMsg.innerText = "কানেক্ট হচ্ছে...";
+            
+            try {
+                // এগোরা চ্যানেলে জয়েন করা
+                await client.join(APP_ID, CHANNEL, null, null);
+                
+                // মাইক চালু করা
+                localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+                await client.publish([localAudioTrack]);
+
+                statusMsg.innerText = "আপনি এখন লাইভ আছেন!";
+                document.getElementById(`seat-icon-${currentSeat}`).classList.add('active-mic');
+                
+            } catch (err) {
+                console.error(err);
+                statusMsg.innerText = "Error: মাইক চালু করা যায়নি।";
+            }
+        }
+
+        // অন্য কেউ কথা বললে যেন শোনা যায়
+        client.on("user-published", async (user, mediaType) => {
+            await client.subscribe(user, mediaType);
+            if (mediaType === "audio") {
+                user.audioTrack.play();
+            }
+        });
+
+        window.onclick = function(e) { if (e.target == modal) closeModal(); }
+    </script>
+</body>
+</html>
+
