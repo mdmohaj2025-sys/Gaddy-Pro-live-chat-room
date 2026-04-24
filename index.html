@@ -6,40 +6,35 @@
     <title>MOi · শব্দের সংযোগ</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
     <style>
-        /* আপনার অরিজিনাল ডিজাইন এখানে হুবহু রাখা হয়েছে */
+        /* আপনার সব ডিজাইন হুবহু এখানে থাকবে */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', 'Noto Sans Bengali', Arial, sans-serif; }
         body { background: radial-gradient(circle at 50% 0%, #e0c3fc 0%, #8ec5fc 50%, #b5d1ff 100%); min-height: 100vh; color: white; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; position: relative; }
         .bg-blob { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.3; z-index: 0; animation: floatBlob 12s ease-in-out infinite; }
         .bg-blob:nth-child(1) { width: 400px; height: 400px; background: #ff85a2; top: -100px; left: -100px; }
         .bg-blob:nth-child(2) { width: 350px; height: 350px; background: #9b86f1; bottom: -120px; right: -80px; animation-delay: -5s; }
         .bg-blob:nth-child(3) { width: 250px; height: 250px; background: #6ec6ff; top: 50%; left: 60%; animation-delay: -8s; }
-        
-        @keyframes floatBlob { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(40px, -50px) scale(1.1); } 50% { transform: translate(-20px, 30px) scale(0.9); } 75% { transform: translate(-50px, -20px) scale(1.05); } }
-        
+        @keyframes floatBlob { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-20px, 30px) scale(0.9); } }
+
         #main-login-page { width: 100%; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 50px 20px 30px; position: relative; z-index: 10; }
-        .logo-container { text-align: center; margin-top: 40px; }
-        .logo-text { font-size: 110px; font-weight: 900; color: #fff; text-shadow: 0 0 20px rgba(155,134,241,0.6), 0 0 60px rgba(255,133,162,0.4), 4px 6px 0px rgba(255,133,162,0.7); letter-spacing: -3px; line-height: 1; position: relative; display: inline-block; }
-        .slogan { font-size: 18px; margin-top: 5px; opacity: 0.95; font-weight: 300; letter-spacing: 1px; }
-        
-        .btn { width: 100%; max-width: 360px; height: 58px; border-radius: 30px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; cursor: pointer; border: none; margin-bottom: 15px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .btn-google { background: rgba(255, 255, 255, 0.95); color: #333; }
-        .btn-google img { width: 24px; margin-right: 12px; }
-        
-        .divider { display: flex; align-items: center; width: 100%; max-width: 360px; margin: 20px 0; opacity: 0.9; }
-        .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: rgba(255, 255, 255, 0.7); margin: 0 15px; }
+        .logo-text { font-size: 110px; font-weight: 900; color: #fff; text-shadow: 0 0 20px rgba(155,134,241,0.6), 4px 6px 0px rgba(255,133,162,0.7); letter-spacing: -3px; line-height: 1; }
+        .slogan { font-size: 18px; margin-top: 5px; opacity: 0.95; }
+
+        .btn { width: 100%; max-width: 360px; height: 58px; border-radius: 30px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; cursor: pointer; border: none; margin-bottom: 15px; transition: 0.3s; background: rgba(255, 255, 255, 0.95); color: #333; }
+        .btn img { width: 24px; margin-right: 12px; }
+
         .social-icons { display: flex; gap: 18px; }
-        .icon-circle { width: 55px; height: 55px; border-radius: 50%; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; backdrop-filter: blur(10px); transition: 0.3s; }
-        
+        .icon-circle { width: 55px; height: 55px; border-radius: 50%; background: rgba(255, 255, 255, 0.25); display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; backdrop-filter: blur(10px); }
+
         #profile-setup-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: none; flex-direction: column; padding: 25px; color: #333; z-index: 300; overflow-y: auto; }
-        .profile-pic-section { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
-        .profile-circle { width: 110px; height: 110px; border-radius: 50%; background: #f0f2f5; display: flex; align-items: center; justify-content: center; font-size: 40px; border: 2px dashed #ccc; cursor: pointer; position: relative; overflow: hidden; }
+        .profile-circle { width: 110px; height: 110px; border-radius: 50%; background: #f0f2f5; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; border: 2px dashed #ccc; overflow: hidden; }
         .input-box { background: #f5f7fa; border-radius: 12px; padding: 12px 15px; margin-bottom: 15px; border: 1px solid #eee; }
         .input-box label { font-size: 12px; color: #888; }
         .input-box input { border: none; background: transparent; width: 100%; outline: none; font-size: 16px; margin-top: 5px; }
-        .gender-container { display: flex; gap: 15px; }
-        .gender-btn { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #ddd; text-align: center; cursor: pointer; transition: 0.3s; }
-        .gender-btn.active { background: #9b86f1; color: white; border-color: #9b86f1; }
-        .confirm-btn { background: linear-gradient(135deg, #9b86f1, #7c5ce7); color: white; width: 100%; padding: 16px; border-radius: 30px; border: none; font-weight: bold; font-size: 18px; margin-top: 30px; cursor: pointer; }
+        .gender-btn { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #ddd; text-align: center; cursor: pointer; }
+        .gender-btn.active { background: #9b86f1; color: white; }
+        .confirm-btn { background: linear-gradient(135deg, #9b86f1, #7c5ce7); color: white; width: 100%; padding: 16px; border-radius: 30px; border: none; font-weight: bold; font-size: 18px; margin-top: 20px; cursor: pointer; }
+        
+        #crop-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 500; }
     </style>
 </head>
 <body>
@@ -51,13 +46,12 @@
             <h1 class="logo-text">MOi</h1>
             <p class="slogan">🎵 Sound connects you and me</p>
         </div>
-        
         <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-            <button class="btn btn-google" onclick="loginWithGoogle()">
+            <button class="btn" id="googleLoginBtn">
                 <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="G">
                 Google দিয়ে চালিয়ে যান
             </button>
-            <div class="divider">অথবা</div>
+            <div style="margin: 20px 0; opacity: 0.7;">অথবা</div>
             <div class="social-icons">
                 <div class="icon-circle">📱</div>
                 <div class="icon-circle">✉️</div>
@@ -71,26 +65,38 @@
     </div>
 
     <div id="profile-setup-page">
-        <div class="profile-pic-section">
-            <div class="profile-circle" id="profilePicBtn" onclick="document.getElementById('fileInput').click()">
-                <span id="pic-icon">📷</span>
-                <img id="preview" style="width:100%; height:100%; object-fit:cover; display:none;">
-            </div>
-            <input type="file" id="fileInput" hidden accept="image/*" onchange="startCropping(event)">
+        <h2 style="text-align: center; margin-bottom: 25px;">প্রোফাইল তৈরি করুন</h2>
+        <div class="profile-circle" onclick="document.getElementById('fileInput').click()">
+            <span id="pic-icon">📷</span>
+            <img id="preview" style="width:100%; height:100%; object-fit:cover; display:none;">
         </div>
+        <input type="file" id="fileInput" hidden accept="image/*" onchange="startCrop(event)">
+        
         <div class="input-box"><label>ডাকনাম (Nickname)</label><input type="text" id="nickname"></div>
         <div class="input-box"><label>ইমেইল (Email)</label><input type="email" id="reg-email" readonly></div>
-        <div class="gender-container">
-            <div class="gender-btn" id="male-btn" onclick="selectGender('Male')">👨 পুরুষ</div>
-            <div class="gender-btn" id="female-btn" onclick="selectGender('Female')">👩 মহিলা</div>
+        
+        <div style="display:flex; gap:15px;">
+            <div class="gender-btn" id="m-btn" onclick="setGender('Male')">👨 পুরুষ</div>
+            <div class="gender-btn" id="f-btn" onclick="setGender('Female')">👩 মহিলা</div>
         </div>
-        <button class="confirm-btn" onclick="confirmRegistration()">কনফার্ম</button>
+        <button class="confirm-btn" onclick="finishSetup()">কনফার্ম</button>
     </div>
+
+    <div id="crop-modal">
+        <div style="width:90%; max-width:350px;"><img id="crop-img" style="max-width:100%;"></div>
+        <div style="margin-top:20px;">
+            <button onclick="closeCrop()" style="padding:10px 20px;">বাতিল</button>
+            <button onclick="applyCrop()" style="padding:10px 20px; background:#9b86f1; color:white; border:none;">সেভ</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
+        // আপনার ফায়ারবেস কনফিগ
         const firebaseConfig = {
             apiKey: "AIzaSyDXwE6T6fOBBIbxWIMBPJoHN4PD9NXazKw",
             authDomain: "moi-project-25509.firebaseapp.com",
@@ -104,33 +110,57 @@
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        window.loginWithGoogle = function() {
+        // গুগল লগইন ফাংশন
+        document.getElementById('googleLoginBtn').onclick = () => {
             signInWithPopup(auth, provider).then((result) => {
                 const user = result.user;
+                // প্রোফাইল পেজে ডাটা পাঠানো
                 document.getElementById('nickname').value = user.displayName;
                 document.getElementById('reg-email').value = user.email;
                 if(user.photoURL) {
                     const preview = document.getElementById('preview');
-                    preview.src = user.photoURL.replace('s96-c', 's400-c'); 
+                    preview.src = user.photoURL;
                     preview.style.display = 'block';
                     document.getElementById('pic-icon').style.display = 'none';
                 }
-                document.getElementById('profile-setup-page').style.display = 'flex';
+                // পেজ পরিবর্তন
                 document.getElementById('main-login-page').style.display = 'none';
-            }).catch((error) => { console.log(error); });
+                document.getElementById('profile-setup-page').style.display = 'flex';
+            }).catch((error) => {
+                alert("লগইন ব্যর্থ হয়েছে! ডোমেইনটি ফায়ারবেসে অ্যাড করেছেন তো?");
+            });
         };
     </script>
 
     <script>
-        let selectedGender = "";
-        function selectGender(g) {
-            selectedGender = g;
-            document.getElementById('male-btn').className = g==='Male'?'gender-btn active':'gender-btn';
-            document.getElementById('female-btn').className = g==='Female'?'gender-btn active':'gender-btn';
+        // ক্রপার এবং জেন্ডার লজিক
+        let cropper, gender = "";
+        function setGender(g) {
+            gender = g;
+            document.getElementById('m-btn').className = g==='Male'?'gender-btn active':'gender-btn';
+            document.getElementById('f-btn').className = g==='Female'?'gender-btn active':'gender-btn';
         }
-        function confirmRegistration() {
-            if(!selectedGender) { alert("লিঙ্গ নির্বাচন করুন"); return; }
-            alert("প্রোফাইল সম্পন্ন হয়েছে!");
+        function startCrop(e) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                document.getElementById('crop-img').src = event.target.result;
+                document.getElementById('crop-modal').style.display = 'flex';
+                if(cropper) cropper.destroy();
+                cropper = new Cropper(document.getElementById('crop-img'), { aspectRatio: 1 });
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
+        function applyCrop() {
+            const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
+            document.getElementById('preview').src = canvas.toDataURL();
+            document.getElementById('preview').style.display = 'block';
+            document.getElementById('pic-icon').style.display = 'none';
+            closeCrop();
+        }
+        function closeCrop() { document.getElementById('crop-modal').style.display = 'none'; }
+        function finishSetup() {
+            if(!gender) return alert("লিঙ্গ নির্বাচন করুন");
+            alert("প্রোফাইল সম্পন্ন!");
         }
     </script>
 </body>
