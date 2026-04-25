@@ -2,173 +2,567 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gaddy Pro Final Gift Panel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Voice Room - Live</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css">
+    <script src="https://cdn.agora.io/sdk/web/agora-rtc-sdk-4.2.0.js"></script>
     <style>
-        body { margin: 0; background: #0a0a0a; color: white; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; overflow: hidden; height: 100vh; }
-        h2 { margin-top: 15px; font-size: 18px; color: #ffcc00; text-transform: uppercase; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+        body { background: #f5f5f5; display: flex; justify-content: center; overflow-x: hidden; overflow-y: auto; }
 
-        /* গিফট গ্রিড */
-        .gift-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            padding: 15px;
-            width: 100%;
-            max-width: 400px;
+        .app-container {
+            width: 100%; max-width: 400px; min-height: 100vh; background: white;
+            position: relative; border: 1px solid #ddd; overflow-y: auto;
+            display: flex; flex-direction: column; margin: 0 auto;
         }
 
-        .gift-item {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 12px;
-            padding: 10px 5px;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.2s;
+        .top-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; }
+        .profile-group { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .group-avatar { width: 40px; height: 40px; border-radius: 50%; background: #eee; border: 1px solid #ddd; object-fit: cover; }
+
+        .status-container { padding: 15px; display: flex; align-items: center; justify-content: space-between; }
+        .status-msg { font-size: 18px; font-weight: bold; }
+        #topic-editor { display: none; position: absolute; top: 110px; left: 10px; right: 10px; padding: 15px; background: white; z-index: 4000; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 8px; }
+
+        .seats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; padding: 10px; text-align: center; }
+        .seat-item { display: flex; flex-direction: column; align-items: center; position: relative; cursor: pointer; }.circle { width: 55px; height: 55px; border-radius: 50%; background: #f2f2f2; display: flex; align-items: center; justify-content: center; border: 2px solid #e0e0e0; overflow: hidden; position: relative; transition: box-shadow 0.15s; }
+.user-img { width: 100%; height: 100%; object-fit: cover; }
+.label { font-size: 10px; margin-top: 5px; font-weight: bold; color: #555; width: 55px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lock-overlay { display: none; position: absolute; top: 18px; font-size: 16px; z-index: 10; }
+
+.mute-badge { display: none; position: absolute; bottom: 2px; right: 2px; background: red; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 12px; text-align: center; line-height: 18px; z-index: 20; }
+
+.listener-section { padding: 20px 15px; flex-grow: 1; }
+#bottom-profile { display: flex; flex-direction: column; align-items: center; width: fit-content; position: relative; }
+.avatar-l { width: 55px; height: 55px; border-radius: 50%; background: #ddd; background-image: url('https://via.placeholder.com/55'); background-size: cover; position: relative; }
+
+.footer-nav { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; }
+.nav-btn { width: 45px; height: 45px; border-radius: 50%; background: #f8f9fa; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid #eee; cursor: pointer; }
+
+.full-page { position: absolute; top: 0; left: 100%; width: 100%; height: 100%; background: white; z-index: 5000; transition: 0.3s; padding: 20px; }
+.full-page.active { left: 0; }
+#cropper-container { width: 100%; height: 250px; margin-bottom: 10px; display: none; }
+
+.overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; }
+.bottom-sheet { position: fixed; bottom: -100%; left: 50%; transform: translateX(-50%); width: 360px; max-width: 100%; background: white; border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 2000; transition: 0.4s; padding: 15px 0; }
+.bottom-sheet.show { bottom: 0; }
+.menu-option { padding: 15px 25px; display: flex; align-items: center; gap: 15px; cursor: pointer; }
+
+.emoji-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 15px; }
+.emoji-item { font-size: 28px; text-align: center; padding: 8px; cursor: pointer; border-radius: 8px; }
+.emoji-item:active { background: #eee; }
+
+.floating-emoji { position: absolute; font-size: 30px; z-index: 3000; pointer-events: none; animation: floatAndFade 2s ease-out forwards; }
+@keyframes floatAndFade {
+    0% { opacity: 1; transform: translateY(0) scale(0.8); }
+    20% { opacity: 1; transform: translateY(-10px) scale(1.2); }
+    100% { opacity: 0; transform: translateY(-60px) scale(1); }
+             }        .gift-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 12px; }
+        .gift-item { text-align: center; padding: 8px; border-radius: 8px; cursor: pointer; border: 1px solid #eee; transition: 0.2s; }
+        .gift-item:active { background: #f0f0f0; }
+        .gift-item.expensive { background: #fff3e0; border-color: #ffb74d; box-shadow: 0 0 8px rgba(255,152,0,0.3); }
+        .gift-preview { width: 100%; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+
+        .fullscreen-gift { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
+        .fullscreen-gift .gift-big { font-size: 120px; animation: giftBurst 1.5s ease-out forwards; filter: drop-shadow(0 0 30px gold); }
+        @keyframes giftBurst {
+            0% { transform: scale(0) rotate(0deg); opacity: 0; }
+            30% { transform: scale(1.3) rotate(20deg); opacity: 1; }
+            60% { transform: scale(0.9) rotate(-10deg); }
+            80% { transform: scale(1.1) rotate(5deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
-
-        .gift-item.selected { border-color: #00e5ff; background: rgba(0, 229, 255, 0.1); }
-        .gift-item img { width: 45px; height: 45px; margin-bottom: 5px; }
-        .coin-text { display: block; color: #ffd700; font-size: 12px; font-weight: bold; }
-
-        /* সেন্ড বাটন */
-        .send-btn {
-            position: fixed;
-            bottom: 30px;
-            padding: 12px 80px;
-            background: linear-gradient(45deg, #00c6ff, #0072ff);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-weight: bold;
-            font-size: 18px;
-            cursor: pointer;
+        .fullscreen-gift .gift-name { color: white; font-size: 24px; margin-top: 15px; font-weight: bold; animation: fadeInUp 1s ease; }
+        .fullscreen-gift .coin-info { color: #ffd700; font-size: 16px; margin-top: 5px; animation: fadeInUp 1.2s ease; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
-        /* অ্যানিমেশন লেয়ার */
-        #animationLayer {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 9999;
-            pointer-events: none;
-            justify-content: center;
-            align-items: center;
+        .fly-gift { position: fixed; font-size: 50px; z-index: 10000; pointer-events: none; transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94); filter: drop-shadow(0 0 15px gold); }
+        .impact-effect { position: absolute; font-size: 40px; z-index: 3000; pointer-events: none; animation: impactPop 0.6s ease-out forwards; }
+        @keyframes impactPop {
+            0% { transform: scale(0.5); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 0; }
         }
-
-        /* ভিডিও এবং ইমোজি স্টাইল */
-        #displayVideo, #displayEmoji { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-            display: none;
-            transition: all 1.5s ease-in-out; 
-        }
-
-        #displayEmoji {
-            width: 180px;
-            height: 180px;
-            object-fit: contain;
-            animation: popAndShrink 3s ease-in-out forwards;
-        }
-
-        /* ছোট হয়ে গায়েব হওয়ার এনিমেশন ক্লাস */
-        .shrink-effect {
-            transform: scale(0);
-            opacity: 0;
-        }
-
-        @keyframes popAndShrink {
-            0% { transform: scale(0); opacity: 0; }
-            30% { transform: scale(1.5); opacity: 1; }
-            100% { transform: scale(0); opacity: 0; transform: translateY(-200px); }
+        .drop-gift { position: absolute; font-size: 26px; z-index: 3000; pointer-events: none; animation: dropIn 1s ease-out forwards; }
+        @keyframes dropIn {
+            0% { transform: translateY(-40px); opacity: 0; }
+            50% { transform: translateY(5px); opacity: 1; }
+            70% { transform: translateY(-3px); }
+            100% { transform: translateY(0); opacity: 1; }
         }
     </style>
 </head>
 <body>
 
-    <h2>Premium Gift Shop</h2>
-
-    <div class="gift-grid">
-        <div class="gift-item" onclick="selectGift(this, 'video', 'https://github.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/raw/refs/heads/main/GRNwcWsCmZtWZZKCsijaSOeRp0O.mp4')">
-            <img src="https://img.icons8.com/emoji/96/volcano-emoji.png">
-            <span class="coin-text">٩٩٩٩ 🪙</span>
+<div class="app-container">
+    <div class="top-header">
+        <div class="profile-group" onclick="togglePage('settingsPage', true)">
+            <img src="https://via.placeholder.com/40" id="headerAvatar" class="group-avatar">
+            <div style="display:flex; flex-direction:column;">
+                <span id="headerGroupName" style="font-size:14px; font-weight:bold;">n {mohj}</span>
+                <span style="font-size:10px; color:#888;">সদস্য: 7</span>
+            </div>
         </div>
-
-        <div class="gift-item" onclick="selectGift(this, 'video', 'https://github.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/raw/refs/heads/main/8af340c51e22b4fc2c3d66ecde60f711.mp4')">
-            <img src="https://img.icons8.com/emoji/96/rocket-emoji.png">
-            <span class="coin-text">٧٥٠٠ 🪙</span>
+        <div class="header-icons">
+            <button onclick="copyRoomLink()" style="cursor:pointer; background:#00c3ff; color:white; border:none; border-radius:5px; padding:5px 10px; font-size:12px;">🔗 শেয়ার</button>
+            <span onclick="togglePage('exitPage', true)" style="cursor:pointer; margin-left:10px;">✕</span>
         </div>
+    </div>    <div class="status-container">
+        <div class="status-msg" id="displayTopic">আমি তোমাকে ভালোবাসি 💘</div>
+        <span onclick="openTopicEditor()" style="cursor:pointer; color:#00c3ff;">✎</span>
+    </div>
+    <div id="topic-editor">
+        <input type="text" id="topicInput" style="width:75%; padding:8px;" placeholder="টপিক লিখুন...">
+        <button onclick="saveTopic()" style="padding:8px 15px; background:#00c3ff; color:white; border:none; border-radius:5px;">ওকে</button>
+    </div>
 
-        <div class="gift-item" onclick="selectGift(this, 'video', 'https://github.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/raw/refs/heads/main/2e5183f3caf5d5d6f29c0b2d5278b90f.mp4')">
-            <img src="https://img.icons8.com/emoji/96/crown-emoji.png">
-            <span class="coin-text">٥٠٠٠ 🪙</span>
-        </div>
-
-        <div class="gift-item" onclick="selectGift(this, 'emoji', 'https://img.icons8.com/emoji/96/rose.png')">
-            <img src="https://img.icons8.com/emoji/96/rose.png">
-            <span class="coin-text">١٠ 🪙</span>
+    <div class="seats-grid" id="seatsContainer">
+        <div class="seat-item" onclick="handleSeatClick(this, 'host')">
+            <div class="circle" style="border:2px solid #8bc34a;">
+                🎤
+                <span class="mute-badge">🔇</span>
+                <span class="lock-overlay">🔒</span>
+            </div>
+            <div class="label">হোস্ট</div>
         </div>
     </div>
 
-    <button class="send-btn" onclick="sendGift()">SEND</button>
-
-    <div id="animationLayer">
-        <video id="displayVideo" playsinline></video>
-        <img id="displayEmoji" src="" alt="gift">
+    <div class="listener-section">
+        <p style="color:#888; font-size:12px; margin-bottom:10px;">শ্রোতা</p>
+        <div id="bottom-profile">
+            <div class="avatar-l"><span class="mute-badge">🔇</span></div>
+            <div class="label" style="text-align:center;">MOHAJ</div>
+        </div>
     </div>
 
-    <script>
-        let currentType = '';
-        let currentSource = '';
+    <div class="footer-nav">
+        <div style="display:flex; gap:12px;">
+            <div class="nav-btn" id="micTrigger">🎤</div>
+            <div class="nav-btn" id="emojiTrigger">😊</div>
+        </div>
+        <div style="display:flex; gap:12px;">
+            <div class="nav-btn" id="giftTrigger" style="background:#00c3ff; color:white;">🎁</div>
+        </div>
+    </div>
 
-        function selectGift(el, type, source) {
-            document.querySelectorAll('.gift-item').forEach(item => item.classList.remove('selected'));
-            el.classList.add('selected');
-            currentType = type;
-            currentSource = source;
+    <div class="full-page" id="settingsPage">
+        <div onclick="togglePage('settingsPage', false)" style="cursor:pointer; margin-bottom:20px; font-weight:bold;">⬅ গ্রুপ সেটিংস</div>
+        <div style="text-align:center;">
+            <div id="cropper-container"></div>
+            <button onclick="document.getElementById('fileInput').click()" style="padding:8px; margin-bottom:10px;">ছবি বাছুন</button>
+            <input type="file" id="fileInput" hidden onchange="initCrop(event)">
+            <input type="text" id="gNameInput" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:5px;" placeholder="গ্রুপের নতুন নাম...">
+            <button onclick="applySettings()" style="width:100%; padding:12px; background:#00c3ff; color:white; border:none; margin-top:20px; border-radius:5px; font-weight:bold;">সেভ করুন</button>
+        </div>
+    </div>
+
+    <div class="full-page" id="exitPage">
+        <div style="height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+            <h2 style="margin-bottom:20px;">বাহির হতে চান?</h2>
+            <div style="display:flex; gap:20px; width:100%;">
+                <button onclick="togglePage('exitPage', false)" style="flex:1; padding:15px; border:none; border-radius:8px;">না</button>
+                <button onclick="location.reload()" style="flex:1; padding:15px; border:none; border-radius:8px; background:red; color:white;">হ্যাঁ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeAllMenus()"></div>
+
+<div class="bottom-sheet" id="emptySeatMenu">
+    <div class="menu-option" onclick="takeMic()"><span>🛋️</span> মাইক নিন</div>
+    <div class="menu-option"><span>➕</span> স্পিকারদের আমন্ত্রণ করুন</div>
+    <div class="menu-option" onclick="toggleLock()"><span id="lIcon">🔒</span> <span id="lText">মাইক লক করুন</span></div>
+</div>
+
+<div class="bottom-sheet" id="activeUserMenu">
+    <div class="menu-option"><span>👤</span> প্রোফাইল দেখুন</div>
+    <div class="menu-option" style="color:red;" onclick="releaseMic()"><span>🛋️</span> মাইক শেষ করুন</div>
+</div>
+
+<div class="bottom-sheet" id="emojiPanel">
+    <div style="text-align:center; font-weight:bold; padding:10px;">ইমোজি রিঅ্যাক্ট করুন</div>
+    <div class="emoji-grid" id="emojiGrid"></div>
+</div>
+
+<div class="bottom-sheet" id="giftPanel">
+    <div style="text-align:center; padding:10px;">
+        <div id="giftTargetAvatar" style="width:40px; height:40px; border-radius:50%; background:#ddd; margin:0 auto; border:2px solid gold; background-size:cover;"></div>
+        <div id="giftTargetName" style="font-weight:bold; margin-top:5px;">Speaker</div>
+    </div>
+    <div class="gift-grid" id="giftGrid"></div>
+</div>
+
+<div class="bottom-sheet" id="micPanel">
+    <div style="text-align:center; font-weight:bold; padding:10px;">মাইক কন্ট্রোল</div>
+    <div class="menu-option" id="muteOption" onclick="toggleMute()">
+        <span id="micOptionIcon">🔇</span> <span id="micOptionText">মাইক বন্ধ করুন</span>
+    </div>
+</div>
+
+<div class="fullscreen-gift" id="fullscreenGift">
+    <div class="gift-big" id="giftBigIcon">🎁</div>
+    <div class="gift-name" id="giftBigName"></div>
+    <div class="coin-info" id="giftBigCoin"></div>
+</div><script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
+<script>
+    // 🔥 Agora কনফিগারেশন (Token ছাড়া)
+    const APP_ID = 'eaa4c1fe1f4047168877cc9cd9f28c8d';
+    const CHANNEL_NAME = 'voiceRoom1';
+    const agoraClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+    let localAudioTrack = null;
+    let localUid = null;
+    let isMuted = false;
+
+    // রুমে জয়েন
+    agoraClient.join(APP_ID, CHANNEL_NAME, null, null)
+      .then(uid => {
+        localUid = uid;
+        console.log('✅ রুমে জয়েন সফল! আপনার UID:', uid);
+      })
+      .catch(err => console.error('❌ জয়েন করতে সমস্যা:', err));
+
+    // রিমোট ইউজারের অডিও
+    agoraClient.on('user-published', async (user, mediaType) => {
+      if (mediaType === 'audio') {
+        await agoraClient.subscribe(user, mediaType);
+        user.audioTrack.play();
+        console.log('🔊 রিমোট স্পিকার:', user.uid);
+        addRemoteUserToSeat(user.uid);
+      }
+    });
+
+    agoraClient.on('user-unpublished', (user, mediaType) => {
+      if (mediaType === 'audio') {
+        console.log('🔇 রিমোট স্পিকার চলে গেছেন:', user.uid);
+        removeRemoteUserFromSeat(user.uid);
+      }
+    });
+
+    // ভলিউম ইন্ডিকেটর
+    agoraClient.enableAudioVolumeIndicator();
+    agoraClient.on('volume-indicator', volumes => {
+      volumes.forEach(vol => highlightSeat(vol.uid, vol.level));
+    });
+
+    // ─── সিট তৈরি ───
+    const seatsContainer = document.getElementById('seatsContainer');
+    for(let i=2; i<=10; i++){
+        seatsContainer.innerHTML += `<div class="seat-item" onclick="handleSeatClick(this, ${i})"><div class="circle">🛋️<span class="lock-overlay">🔒</span><span class="mute-badge">🔇</span></div><div class="label" data-num="${i}">${i}</div></div>`;
+    }
+
+    let activeSeat = null;
+    let userCurrentSeat = null;
+    let croppie = null;
+    let remoteUidSeatMap = {};
+
+    // ইমোজি
+    const emojiList = ['😂', '❤️', '😍', '🔥', '😭', '😡', '👍', '🎉', '💔', '🤣', '😎', '🥳', '😇', '💋', '🙏'];
+    const emojiGrid = document.getElementById('emojiGrid');
+    emojiList.forEach(emoji => {
+        const div = document.createElement('div');
+        div.className = 'emoji-item';
+        div.textContent = emoji;
+        div.addEventListener('click', () => sendReaction(emoji));
+        emojiGrid.appendChild(div);
+    });
+
+    document.getElementById('emojiTrigger').addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.bottom-sheet').forEach(m => m.classList.remove('show'));
+        document.getElementById('emojiPanel').classList.add('show');
+        document.getElementById('overlay').style.display = 'block';
+    });
+
+    function sendReaction(emoji) {
+        closeAllMenus();
+        let targetElement;
+        if (userCurrentSeat) {
+            targetElement = userCurrentSeat.querySelector('.circle');
+        } else {
+            targetElement = document.querySelector('#bottom-profile .avatar-l');
         }
+        if(!targetElement) return;
+        const floatEl = document.createElement('div');
+        floatEl.className = 'floating-emoji';
+        floatEl.textContent = emoji;
+        targetElement.style.position = 'relative';
+        targetElement.appendChild(floatEl);
+        floatEl.addEventListener('animationend', () => floatEl.remove());
+    }
 
-        function sendGift() {
-            const layer = document.getElementById('animationLayer');
-            const video = document.getElementById('displayVideo');
-            const emoji = document.getElementById('displayEmoji');
+    // মাইক কন্ট্রোল প্যানেল
+    document.getElementById('micTrigger').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!userCurrentSeat) return alert('আগে সিটে বসুন।');
+        document.querySelectorAll('.bottom-sheet').forEach(m => m.classList.remove('show'));
+        updateMicPanelUI();
+        document.getElementById('micPanel').classList.add('show');
+        document.getElementById('overlay').style.display = 'block';
+    });
 
-            if (!currentType) return alert('দয়া করে একটি গিফট সিলেক্ট করুন!');
+    function updateMicPanelUI() {
+        const icon = document.getElementById('micOptionIcon');
+        const text = document.getElementById('micOptionText');
+        if (isMuted) {
+            icon.textContent = '🎤';
+            text.textContent = 'মাইক চালু করুন';
+        } else {
+            icon.textContent = '🔇';
+            text.textContent = 'মাইক বন্ধ করুন';
+        }
+    }    async function takeMic() {
+        if(activeSeat.querySelector('.lock-overlay').style.display === 'block') return alert("এই সিট লক করা আছে!");
+        if(userCurrentSeat) releaseMic(true);
 
-            layer.style.display = 'flex';
+        try {
+            if (!localAudioTrack) {
+                localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+                await agoraClient.publish(localAudioTrack);
+                console.log('🎤 মাইক্রোফোন চালু হয়েছে');
+            }
+            activeSeat.querySelector('.circle').innerHTML = `<img src="https://via.placeholder.com/55" class="user-img"><span class="lock-overlay">🔒</span><span class="mute-badge">🔇</span>`;
+            activeSeat.querySelector('.label').innerText = "MOHAJ";
+            document.getElementById('bottom-profile').style.visibility = 'hidden';
+            userCurrentSeat = activeSeat;
+            isMuted = false;
+            applyMuteBadge();
+            closeAllMenus();
+        } catch (err) {
+            console.error('মাইক চালু করতে ব্যর্থ:', err);
+            alert('মাইক্রোফোন অনুমতি দেওয়া হয়নি! দয়া করে ব্রাউজারের মাইক পারমিশন দিন।');
+        }
+    }
 
-            if (currentType === 'video') {
-                emoji.style.display = 'none';
-                video.style.display = 'block';
-                video.src = currentSource;
-                video.classList.remove('shrink-effect');
-                video.currentTime = 0;
-                video.play();
+    function releaseMic(isSwitching = false) {
+        if(userCurrentSeat) {
+            const lbl = userCurrentSeat.querySelector('.label');
+            userCurrentSeat.querySelector('.circle').innerHTML = `🛋️<span class="lock-overlay">🔒</span><span class="mute-badge">🔇</span>`;
+            lbl.innerText = lbl.getAttribute('data-num') || "হোস্ট";
+            if(!isSwitching) {
+                document.getElementById('bottom-profile').style.visibility = 'visible';
+                isMuted = false;
+            }
+            userCurrentSeat = null;
+        }
+        if (localAudioTrack && !isSwitching) {
+            localAudioTrack.stop();
+            localAudioTrack.close();
+            agoraClient.unpublish(localAudioTrack);
+            localAudioTrack = null;
+            console.log('🔇 মাইক্রোফোন বন্ধ করা হয়েছে');
+        }
+        closeAllMenus();
+    }
 
-                // ভিডিও শেষ হওয়ার ১.৫ সেকেন্ড আগে ছোট হওয়া শুরু করবে
-                video.ontimeupdate = function() {
-                    if (video.duration - video.currentTime < 1.5) {
-                        video.classList.add('shrink-effect');
-                    }
-                };
+    function toggleMute() {
+        isMuted = !isMuted;
+        if (localAudioTrack) localAudioTrack.setEnabled(!isMuted);
+        applyMuteBadge();
+        updateMicPanelUI();
+        closeAllMenus();
+    }
 
-                video.onended = () => { 
-                    layer.style.display = 'none'; 
-                    video.style.display = 'none';
-                    video.classList.remove('shrink-effect');
-                };
-            } else {
-                video.style.display = 'none';
-                emoji.src = currentSource;
-                emoji.style.display = 'block';
-                setTimeout(() => { layer.style.display = 'none'; emoji.style.display = 'none'; }, 3000);
+    function applyMuteBadge() {
+        if (!userCurrentSeat) return;
+        const badge = userCurrentSeat.querySelector('.mute-badge');
+        if (badge) badge.style.display = isMuted ? 'block' : 'none';
+    }
+
+    function handleSeatClick(el) {
+        activeSeat = el;
+        document.getElementById('overlay').style.display = 'block';
+        document.querySelectorAll('.bottom-sheet').forEach(m => m.classList.remove('show'));
+        if(userCurrentSeat === el) {
+            document.getElementById('activeUserMenu').classList.add('show');
+        } else {
+            const isL = el.querySelector('.lock-overlay').style.display === 'block';
+            document.getElementById('lText').innerText = isL ? "মাইক আনলক করুন" : "মাইক লক করুন";
+            document.getElementById('emptySeatMenu').classList.add('show');
+        }
+    }
+
+    function toggleLock() {
+        const l = activeSeat.querySelector('.lock-overlay');
+        l.style.display = (l.style.display === 'block') ? 'none' : 'block';
+        closeAllMenus();
+    }
+
+    function addRemoteUserToSeat(uid) {
+        const allSeats = document.querySelectorAll('.seat-item');
+        for (let seat of allSeats) {
+            if (seat.querySelector('.circle').innerHTML.includes('🛋️') && !seat.dataset.occupied) {
+                seat.querySelector('.circle').innerHTML = `<img src="https://via.placeholder.com/55" class="user-img"><span class="lock-overlay">🔒</span><span class="mute-badge">🔇</span>`;
+                seat.querySelector('.label').innerText = 'User'+uid;
+                seat.dataset.occupied = 'true';
+                seat.dataset.uid = uid;
+                remoteUidSeatMap[uid] = seat;
+                break;
             }
         }
-    </script>
+    }
+
+    function removeRemoteUserFromSeat(uid) {
+        const seat = remoteUidSeatMap[uid];
+        if (seat) {
+            seat.querySelector('.circle').innerHTML = `🛋️<span class="lock-overlay">🔒</span><span class="mute-badge">🔇</span>`;
+            seat.querySelector('.label').innerText = seat.querySelector('.label').getAttribute('data-num') || '';
+            seat.dataset.occupied = '';
+            seat.dataset.uid = '';
+            delete remoteUidSeatMap[uid];
+        }
+    }
+
+    function highlightSeat(uid, level) {
+        if (uid === localUid && userCurrentSeat) {
+            const circle = userCurrentSeat.querySelector('.circle');
+            if (circle) circle.style.boxShadow = level > 5 ? '0 0 20px 4px #00ffcc' : 'none';
+        }
+        const remoteSeat = remoteUidSeatMap[uid];
+        if (remoteSeat) {
+            const circle = remoteSeat.querySelector('.circle');
+            if (circle) circle.style.boxShadow = level > 5 ? '0 0 20px 4px #00ffcc' : 'none';
+        }
+    }
+
+    function openTopicEditor() { document.getElementById('topic-editor').style.display = 'block'; }
+    function saveTopic() {
+        const val = document.getElementById('topicInput').value;
+        if(val) document.getElementById('displayTopic').innerText = val;
+        document.getElementById('topic-editor').style.display = 'none';
+    }
+
+    function initCrop(e) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            document.getElementById('cropper-container').style.display = 'block';
+            if(croppie) croppie.destroy();
+            croppie = new Croppie(document.getElementById('cropper-container'), {
+                viewport: { width: 100, height: 100, type: 'square' },
+                boundary: { width: 200, height: 200 }
+            });
+            croppie.bind({ url: ev.target.result });
+        }
+        reader.readAsDataURL(e.target.files[0]);
+    }
+
+    function applySettings() {
+        const name = document.getElementById('gNameInput').value;
+        if(name) document.getElementById('headerGroupName').innerText = name;
+        if(croppie) {
+            croppie.result('base64').then(img => {
+                document.getElementById('headerAvatar').src = img;
+                togglePage('settingsPage', false);
+            });
+        } else { togglePage('settingsPage', false); }
+    }
+
+    function togglePage(id, show) { document.getElementById(id).classList.toggle('active', show); }
+    function closeAllMenus() {
+        document.querySelectorAll('.bottom-sheet').forEach(m => m.classList.remove('show'));
+        document.getElementById('overlay').style.display = 'none';
+    }
+
+    function copyRoomLink() {
+        const link = window.location.href;
+        navigator.clipboard.writeText(link)
+            .then(() => alert('রুমের লিংক কপি হয়েছে!\nবন্ধুদের পাঠিয়ে দিন: ' + link))
+            .catch(() => prompt('ম্যানুয়ালি কপি করুন:', link));
+    }
+
+    // ─── গিফট সিস্টেম ───
+    const giftList = [
+        { name: 'গোলাপ', icon: '🌹', cost: 50, animated: false },
+        { name: 'হার্ট', icon: '❤️', cost: 100, animated: false },
+        { name: 'ক্যান্ডি', icon: '🍬', cost: 150, animated: false },
+        { name: 'টেডি', icon: '🧸', cost: 200, animated: false },
+        { name: 'বেলুন', icon: '🎈', cost: 300, animated: false },
+        { name: 'কেক', icon: '🎂', cost: 500, animated: false },
+        { name: 'ডায়মন্ড', icon: '💍', cost: 1000, animated: true },
+        { name: 'রকেট', icon: '🚀', cost: 2000, animated: true },
+        { name: 'ক্রাউন', icon: '👑', cost: 5000, animated: true },
+        { name: 'ড্রাগন', icon: '🐉', cost: 8000, animated: true },
+        { name: 'ফিনিক্স', icon: '🐦‍🔥', cost: 12000, animated: true },
+        { name: 'ইউনিকর্ন', icon: '🦄', cost: 20000, animated: true }
+    ];
+
+    const giftGrid = document.getElementById('giftGrid');
+    giftList.forEach(gift => {
+        const div = document.createElement('div');
+        div.className = `gift-item ${gift.animated ? 'expensive' : ''}`;
+        div.innerHTML = `
+            <div class="gift-preview">${gift.icon}</div>
+            <div style="font-size:11px; font-weight:bold;">${gift.name}</div>
+            <div style="font-size:9px; color:#888;">🪙 ${gift.cost}</div>
+        `;
+        div.addEventListener('click', () => sendGift(gift));
+        giftGrid.appendChild(div);
+    });
+
+    document.getElementById('giftTrigger').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!userCurrentSeat) return alert('শুধুমাত্র স্পিকারকে গিফট পাঠানো যাবে।');
+        document.querySelectorAll('.bottom-sheet').forEach(m => m.classList.remove('show'));
+        const avatar = userCurrentSeat.querySelector('.user-img');
+        const name = userCurrentSeat.querySelector('.label').innerText;
+        const targetAvatar = document.getElementById('giftTargetAvatar');
+        targetAvatar.style.backgroundImage = avatar ? `url(${avatar.src})` : 'none';
+        targetAvatar.style.backgroundSize = 'cover';
+        document.getElementById('giftTargetName').innerText = name;
+        document.getElementById('giftPanel').classList.add('show');
+        document.getElementById('overlay').style.display = 'block';
+    });
+
+    function sendGift(gift) {
+        closeAllMenus();
+        const targetCircle = userCurrentSeat?.querySelector('.circle');
+        if (!targetCircle) return;
+
+        if (gift.animated) {
+            const fsGift = document.getElementById('fullscreenGift');
+            document.getElementById('giftBigIcon').textContent = gift.icon;
+            document.getElementById('giftBigName').innerText = gift.name;
+            document.getElementById('giftBigCoin').innerText = `🪙 ${gift.cost} কয়েন`;
+            fsGift.style.display = 'flex';
+            setTimeout(() => {
+                fsGift.style.display = 'none';
+                flyGiftToTarget(gift.icon, targetCircle);
+            }, 1800);
+        } else {
+            const dropEl = document.createElement('div');
+            dropEl.className = 'drop-gift';
+            dropEl.textContent = gift.icon;
+            targetCircle.style.position = 'relative';
+            targetCircle.appendChild(dropEl);
+            dropEl.addEventListener('animationend', () => dropEl.remove());
+        }
+    }
+
+    function flyGiftToTarget(icon, target) {
+        const fly = document.createElement('div');
+        fly.className = 'fly-gift';
+        fly.textContent = icon;
+        document.body.appendChild(fly);
+        const targetRect = target.getBoundingClientRect();
+        fly.style.left = (window.innerWidth/2 - 25) + 'px';
+        fly.style.top = (window.innerHeight/2 - 25) + 'px';
+        fly.style.transform = 'scale(1.2)';
+        requestAnimationFrame(() => {
+            fly.style.transform = `translate(${targetRect.left + targetRect.width/2 - window.innerWidth/2}px, ${targetRect.top + targetRect.height/2 - window.innerHeight/2}px) scale(0.5)`;
+            fly.style.opacity = '0.8';
+        });
+        fly.addEventListener('transitionend', () => {
+            fly.remove();
+            const impact = document.createElement('div');
+            impact.className = 'impact-effect';
+            impact.textContent = icon;
+            target.style.position = 'relative';
+            target.appendChild(impact);
+            impact.addEventListener('animationend', () => impact.remove());
+        });
+    }
+</script>
 </body>
 </html>
