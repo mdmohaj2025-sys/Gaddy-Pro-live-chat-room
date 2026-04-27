@@ -1,238 +1,58 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Club Video Gift System</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: sans-serif; background: #1a1a1a; height: 100vh; display: flex; align-items: flex-end; overflow: hidden; }
-
-        .gift-sheet {
-            width: 100%;
-            background: #ffffff;
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
-            padding-bottom: 10px;
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
-        }
-
-        .tabs {
-            display: flex;
-            padding: 15px 20px;
-            gap: 20px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .tab { font-size: 14px; color: #999; font-weight: bold; cursor: pointer; }
-        .tab.active { color: #00b4ff; border-bottom: 2px solid #00b4ff; }
-
-        .gift-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            padding: 15px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .gift-card {
-            background: #f9f9f9;
-            border-radius: 12px;
-            padding: 12px 5px;
-            text-align: center;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: 0.2s;
-        }
-
-        .gift-card.selected {
-            background: #f0faff;
-            border-color: #00b4ff;
-        }
-
-        .gift-card img { width: 55px; height: 55px; object-fit: contain; border-radius: 5px; }
-        .emoji-icon { font-size: 40px; display: block; margin-bottom: 5px; }
-        .gift-name { font-size: 11px; color: #333; font-weight: bold; margin-top: 5px; }
-        .gift-price { font-size: 10px; color: #ffa500; font-weight: bold; margin-top: 2px; }
-
-        .panel-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            border-top: 1px solid #eee;
-        }
-
-        .send-btn {
-            background: #00b4ff;
-            color: #fff;
-            border: none;
-            padding: 10px 30px;
-            border-radius: 25px;
-            font-weight: bold;
-            cursor: pointer;
-            opacity: 0.5;
-            pointer-events: none;
-        }
-
-        .send-btn.active { opacity: 1; pointer-events: auto; }
-
-        #animation-layer {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 1000;
-            pointer-events: none;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .anim-element {
-            font-size: 120px;
-            text-align: center;
-            animation: shrinkFade 3.5s ease-in-out forwards;
-        }
-
-        .video-gift {
-            width: 100vw;
-            height: 100vh;
-            object-fit: contain;
-            background: black;
-            display: block;
-        }
-
-        .shrink-fade {
-            animation: shrinkOut 2s ease-in-out forwards;
-        }
-
-        @keyframes shrinkFade {
-            0% { transform: scale(1.5); opacity: 1; }
-            70% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(0.2); opacity: 0; }
-        }
-
-        @keyframes shrinkOut {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(0.2); opacity: 0; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Agora টেস্ট পেজ</title>
+  <script src="https://cdn.agora.io/sdk/release/AgoraRTC_N-4.22.0.js"></script>
 </head>
 <body>
+  <h3>Agora সংযোগ টেস্ট</h3>
+  <p id="status">অপেক্ষা করছে...</p>
+  <button id="startBtn">▶️ শুরু করুন</button>
 
-<div id="animation-layer"></div>
+  <script>
+    const APP_ID = "3e98fdc6be38445f9e121e0ca61fef95";
+    let client, track;
 
-<div class="gift-sheet">
-    <div class="tabs">
-        <div class="tab">সাম্প্রতিক</div>
-        <div class="tab active">গরম</div>
-        <div class="tab">অ্যাক্টিভিটি</div>
-    </div>
-
-    <div class="gift-grid">
-        <!-- পুরোনো ভিডিও গিফট (৫০০০) -->
-        <div class="gift-card" onclick="selectGift(this, 'video', '')">
-            <img src="https://mdmohaj2025-sys.github.io/Gaddy-Pro-live-chat-room/IMG_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A6%E0%A7%A7%E0%A7%A6%E0%A7%A6%E0%A7%AB%E0%A7%A7.jpg" alt="Video Gift">
-            <div class="gift-name">ভিডিও গিফট</div>
-            <div class="gift-price">💎 ৫০০০</div>
-        </div>
-
-        <!-- ✅ নতুন ভিডিও গিফট (৬০০০) - ইমেজ র- লিংক -->
-        <div class="gift-card" onclick="selectGift(this, 'video', 'new')">
-            <img src="https://raw.githubusercontent.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/main/IMG_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A6%E0%A7%A8%E0%A7%A6%E0%A7%AB%E0%A7%A9%E0%A7%AE.jpg" alt="নতুন ভিডিও">
-            <div class="gift-name">নতুন ভিডিও</div>
-            <div class="gift-price">💎 ৬০০০</div>
-        </div>
-
-        <!-- ইমোজি গিফট -->
-        <div class="gift-card" onclick="selectGift(this, 'emoji', '💋')">
-            <span class="emoji-icon">💋</span>
-            <div class="gift-name">চুমু</div>
-            <div class="gift-price">💎 ১</div>
-        </div>
-
-        <div class="gift-card" onclick="selectGift(this, 'emoji', '🤝')">
-            <span class="emoji-icon">🤝</span>
-            <div class="gift-name">বন্ধুত্ব</div>
-            <div class="gift-price">💎 ৫</div>
-        </div>
-
-        <div class="gift-card" onclick="selectGift(this, 'emoji', '🌹')">
-            <span class="emoji-icon">🌹</span>
-            <div class="gift-name">জাদুর ফুল</div>
-            <div class="gift-price">💎 ১২</div>
-        </div>
-    </div>
-
-    <div class="panel-footer">
-        <div style="font-size: 13px; color: #666;">ব্যালেন্স: 💎 ১০০০০</div>
-        <button id="sendBtn" class="send-btn" onclick="sendGift()">পাঠান</button>
-    </div>
-</div>
-
-<script>
-    let selectedType = "";
-    let selectedValue = "";
-
-    function selectGift(element, type, value) {
-        document.querySelectorAll('.gift-card').forEach(card => card.classList.remove('selected'));
-        element.classList.add('selected');
-        selectedType = type;
-        selectedValue = value;
-        document.getElementById('sendBtn').classList.add('active');
+    function log(msg) {
+      console.log("[TEST]", msg);
+      document.getElementById("status").innerHTML += "<br>" + msg;
     }
 
-    function sendGift() {
-        const layer = document.getElementById('animation-layer');
-        layer.innerHTML = "";
+    document.getElementById("startBtn").addEventListener("click", async () => {
+      try {
+        log("🔸 Agora SDK লোড হয়েছে?");
 
-        if (selectedType === 'video') {
-            const video = document.createElement('video');
-            if (selectedValue === 'new') {
-                video.src = "https://github.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/raw/refs/heads/main/VID_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A6%E0%A7%A8%E0%A7%A6%E0%A7%AA%E0%A7%A6%E0%A7%A6.mp4";
-            } else {
-                video.src = "https://mdmohaj2025-sys.github.io/Gaddy-Pro-live-chat-room/VID_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A6%E0%A7%A6%E0%A7%AB%E0%A7%AA%E0%A7%A9%E0%A7%AE.mp4";
-            }
-            video.className = "video-gift";
-            video.setAttribute('playsinline', '');
-            video.muted = false;
-            layer.appendChild(video);
+        // 1. ক্লায়েন্ট তৈরি
+        client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+        log("🔸 ক্লায়েন্ট তৈরি সফল");
 
-            video.addEventListener('loadedmetadata', () => {
-                const duration = video.duration;
-                const shrinkStart = duration > 4 ? duration - 2 : duration * 0.5;
-                let triggered = false;
-                video.addEventListener('timeupdate', () => {
-                    if (!triggered && video.currentTime >= shrinkStart) {
-                        triggered = true;
-                        video.classList.add('shrink-fade');
-                        setTimeout(() => { layer.innerHTML = ""; }, 2000);
-                    }
-                });
+        // 2. কানেকশন স্টেট মনিটর
+        client.on("connection-state-change", (state) => {
+          log("🔄 স্টেট: " + state);
+        });
 
-                let playPromise = video.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(() => {
-                        video.muted = true;
-                        video.play();
-                    });
-                }
-            });
+        // 3. মাইক ট্র্যাক তৈরি ও চালু
+        track = await AgoraRTC.createMicrophoneAudioTrack();
+        await track.setEnabled(true); // মাইক চালু
+        log("🔸 মাইক ট্র্যাক তৈরি সফল");
 
-            setTimeout(() => {
-                if (layer.contains(video)) layer.innerHTML = "";
-            }, 30000);
+        // 4. ইউনিক চ্যানেল নাম
+        const channel = "test_" + Date.now();
+        log("🔸 চ্যানেল নাম: " + channel);
 
-        } else {
-            const div = document.createElement('div');
-            div.className = "anim-element";
-            div.innerText = selectedValue;
-            layer.appendChild(div);
-            setTimeout(() => { layer.innerHTML = ""; }, 3500);
-        }
-    }
-</script>
+        // 5. জয়েন ও পাবলিশ
+        await client.join(APP_ID, channel, null, null);
+        log("✅ join() সফল! UID পেয়েছি।");
+        await client.publish(track);
+        log("✅ publish() সফল! এখন মাইক অ্যাক্টিভ।");
 
+        log("🎉 Agora পুরোপুরি সংযুক্ত!");
+      } catch (err) {
+        log("❌ ত্রুটি: " + err.message);
+        console.error("বিস্তারিত:", err);
+      }
+    });
+  </script>
 </body>
 </html>
