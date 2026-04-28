@@ -1,58 +1,175 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8">
-  <title>Agora টেস্ট পেজ</title>
-  <script src="https://cdn.agora.io/sdk/release/AgoraRTC_N-4.22.0.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gaddy-Pro Voice Club Test</title>
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.11.0.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            background-color: #f4f7f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        h1 { color: #1a73e8; font-size: 24px; }
+        .status-card {
+            background: #e8f0fe;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #1967d2;
+        }
+        .user-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            min-height: 100px;
+            border: 1px dashed #ccc;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .user-dot {
+            width: 80px;
+            text-align: center;
+        }
+        .avatar {
+            width: 50px;
+            height: 50px;
+            background: #34a853;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .btn-group { display: flex; gap: 10px; }
+        button {
+            flex: 1;
+            padding: 15px;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: bold;
+        }
+        .join-btn { background: #28a745; color: white; }
+        .leave-btn { background: #dc3545; color: white; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        button:hover:not(:disabled) { opacity: 0.8; transform: translateY(-2px); }
+    </style>
 </head>
 <body>
-  <h3>Agora সংযোগ টেস্ট</h3>
-  <p id="status">অপেক্ষা করছে...</p>
-  <button id="startBtn">▶️ শুরু করুন</button>
 
-  <script>
-    const APP_ID = "3e98fdc6be38445f9e121e0ca61fef95";
-    let client, track;
+<div class="container">
+    <h1>Gaddy-Pro Voice Club</h1>
+    <p>চ্যানেল: <span style="color:#e91e63; font-weight:bold;">GaddyProTest</span></p>
 
-    function log(msg) {
-      console.log("[TEST]", msg);
-      document.getElementById("status").innerHTML += "<br>" + msg;
+    <div id="status" class="status-card">অবস্থা: অফলাইন</div>
+
+    <div class="user-list" id="user-container">
+        </div>
+
+    <div class="btn-group">
+        <button id="joinBtn" class="join-btn" onclick="join()">রুমে প্রবেশ করুন</button>
+        <button id="leaveBtn" class="leave-btn" onclick="leave()" disabled>বেরিয়ে যান</button>
+    </div>
+</div>
+
+<script>
+    // আপনার দেওয়া App ID
+    const APP_ID = "3e98fdc6be38445f9e121e0ca61fef95"; 
+    const CHANNEL = "GaddyProTest"; 
+
+    const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+    let localAudioTrack = null;
+
+    async function join() {
+        try {
+            document.getElementById("joinBtn").disabled = true;
+            
+            // এগোরা চ্যানেলে জয়েন করা (টোকেন ছাড়া)
+            const uid = await client.join(APP_ID, CHANNEL, null);
+            
+            // নিজের অডিও সোর্স তৈরি ও পাবলিশ করা
+            localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+            await client.publish([localAudioTrack]);
+
+            document.getElementById("status").innerText = "অবস্থা: আপনি এখন রুমে আছেন";
+            document.getElementById("status").style.background = "#d4edda";
+            document.getElementById("leaveBtn").disabled = false;
+
+            // নিজের জন্য একটি আইকন যোগ করা
+            addUserToUI(uid, "আপনি");
+
+            console.log("Joined with UID: " + uid);
+        } catch (error) {
+            console.error(error);
+            alert("কানেক্ট করা যাচ্ছে না! ড্যাশবোর্ডে 'Testing Mode' চেক করুন।");
+            document.getElementById("joinBtn").disabled = false;
+        }
     }
 
-    document.getElementById("startBtn").addEventListener("click", async () => {
-      try {
-        log("🔸 Agora SDK লোড হয়েছে?");
+    async function leave() {
+        if (localAudioTrack) {
+            localAudioTrack.stop();
+            localAudioTrack.close();
+        }
+        await client.leave();
+        
+        document.getElementById("user-container").innerHTML = "";
+        document.getElementById("status").innerText = "অবস্থা: অফলাইন";
+        document.getElementById("status").style.background = "#e8f0fe";
+        document.getElementById("joinBtn").disabled = false;
+        document.getElementById("leaveBtn").disabled = true;
+    }
 
-        // 1. ক্লায়েন্ট তৈরি
-        client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-        log("🔸 ক্লায়েন্ট তৈরি সফল");
-
-        // 2. কানেকশন স্টেট মনিটর
-        client.on("connection-state-change", (state) => {
-          log("🔄 স্টেট: " + state);
-        });
-
-        // 3. মাইক ট্র্যাক তৈরি ও চালু
-        track = await AgoraRTC.createMicrophoneAudioTrack();
-        await track.setEnabled(true); // মাইক চালু
-        log("🔸 মাইক ট্র্যাক তৈরি সফল");
-
-        // 4. ইউনিক চ্যানেল নাম
-        const channel = "test_" + Date.now();
-        log("🔸 চ্যানেল নাম: " + channel);
-
-        // 5. জয়েন ও পাবলিশ
-        await client.join(APP_ID, channel, null, null);
-        log("✅ join() সফল! UID পেয়েছি।");
-        await client.publish(track);
-        log("✅ publish() সফল! এখন মাইক অ্যাক্টিভ।");
-
-        log("🎉 Agora পুরোপুরি সংযুক্ত!");
-      } catch (err) {
-        log("❌ ত্রুটি: " + err.message);
-        console.error("বিস্তারিত:", err);
-      }
+    // অন্য কেউ জয়েন করলে বা অডিও পাবলিশ করলে
+    client.on("user-published", async (user, mediaType) => {
+        await client.subscribe(user, mediaType);
+        if (mediaType === "audio") {
+            user.audioTrack.play();
+            addUserToUI(user.uid, "বন্ধু");
+        }
     });
-  </script>
+
+    // কেউ রুম ছেড়ে চলে গেলে
+    client.on("user-left", (user) => {
+        const userDiv = document.getElementById(`user-${user.uid}`);
+        if (userDiv) userDiv.remove();
+    });
+
+    // স্ক্রিনে ইউজার আইকন দেখানোর ফাংশন
+    function addUserToUI(uid, label) {
+        if (document.getElementById(`user-${uid}`)) return;
+        
+        const userDiv = document.createElement("div");
+        userDiv.className = "user-dot";
+        userDiv.id = `user-${uid}`;
+        userDiv.innerHTML = `
+            <div class="avatar">${label === "আপনি" ? "Me" : "User"}</div>
+            <p style="font-size:11px; margin-top:5px;">ID: ${uid}</p>
+        `;
+        document.getElementById("user-container").appendChild(userDiv);
+    }
+</script>
+
 </body>
 </html>
