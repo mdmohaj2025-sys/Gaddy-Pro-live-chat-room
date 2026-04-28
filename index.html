@@ -3,173 +3,660 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gaddy-Pro Voice Club Test</title>
-    <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.11.0.js"></script>
-    
+    <title>Voice Room - Gift to Any Seat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            text-align: center;
-            background-color: #f4f7f9;
-            margin: 0;
-            padding: 20px;
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: #f5f5f5; display: flex; justify-content: center; overflow: hidden; }
+
+        .app-container {
+            width: 360px; height: 100vh; background: #fff; position: relative;
+            border: 1px solid #ddd; overflow: hidden; display: flex; flex-direction: column;
         }
-        .container {
-            max-width: 500px;
-            margin: auto;
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+
+        .top-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; }
+        .profile-group { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .group-avatar { width: 40px; height: 40px; border-radius: 50%; background: #eee; border: 1px solid #ddd; object-fit: cover; }
+
+        .status-container { padding: 15px; display: flex; align-items: center; justify-content: space-between; }
+        .status-msg { font-size: 18px; font-weight: bold; }
+        #topic-editor { display: none; position: absolute; top: 110px; left: 10px; right: 10px; padding: 15px; background: white; z-index: 4000; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 8px; }
+
+        .seats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; padding: 10px; text-align: center; }
+        .seat-item { display: flex; flex-direction: column; align-items: center; position: relative; cursor: pointer; }
+        .circle { width: 55px; height: 55px; border-radius: 50%; background: #f2f2f2; display: flex; align-items: center; justify-content: center; border: 1px solid #e0e0e0; overflow: hidden; position: relative; }
+        .user-img { width: 100%; height: 100%; object-fit: cover; }
+        .label { font-size: 10px; margin-top: 5px; font-weight: bold; color: #555; width: 55px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .lock-overlay { display: none; position: absolute; top: 18px; font-size: 16px; z-index: 10; }
+
+        .mute-badge {
+            display: none; position: absolute; bottom: 2px; right: 2px;
+            background: red; color: white; border-radius: 50%; width: 18px; height: 18px;
+            font-size: 12px; text-align: center; line-height: 18px; z-index: 20;
         }
-        h1 { color: #1a73e8; font-size: 24px; }
-        .status-card {
-            background: #e8f0fe;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-weight: bold;
-            color: #1967d2;
+
+        .listener-section { padding: 20px 15px; flex-grow: 1; }
+        #bottom-profile { display: flex; flex-direction: column; align-items: center; width: fit-content; position: relative; }
+        .avatar-l { width: 55px; height: 55px; border-radius: 50%; background: #ddd; background-size: cover; position: relative; }
+
+        .footer-nav { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; }
+        .nav-btn { width: 45px; height: 45px; border-radius: 50%; background: #f8f9fa; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid #eee; cursor: pointer; }
+
+        .full-page { position: absolute; top: 0; left: 100%; width: 100%; height: 100%; background: white; z-index: 5000; transition: 0.3s; padding: 20px; }
+        .full-page.active { left: 0; }
+        #cropper-container { width: 100%; height: 250px; margin-bottom: 10px; display: none; }
+
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; }
+        .bottom-sheet { position: fixed; bottom: -100%; left: 50%; transform: translateX(-50%); width: 360px; background: white; border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 2000; transition: 0.4s; padding: 15px 0; }
+        .bottom-sheet.show { bottom: 0; }
+        .menu-option { padding: 15px 25px; display: flex; align-items: center; gap: 15px; cursor: pointer; }
+
+        .emoji-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 15px; }
+        .emoji-item { font-size: 28px; text-align: center; padding: 8px; cursor: pointer; border-radius: 8px; }
+        .emoji-item:active { background: #eee; }
+
+        .floating-emoji { position: absolute; font-size: 30px; z-index: 3000; pointer-events: none; animation: floatAndFade 2s ease-out forwards; }
+        @keyframes floatAndFade {
+            0% { opacity: 1; transform: translateY(0) scale(0.8); }
+            20% { opacity: 1; transform: translateY(-10px) scale(1.2); }
+            100% { opacity: 0; transform: translateY(-60px) scale(1); }
         }
-        .user-list {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-            margin: 20px 0;
-            min-height: 100px;
-            border: 1px dashed #ccc;
-            padding: 10px;
-            border-radius: 10px;
+
+        .drop-gift-on-seat { position: absolute; font-size: 26px; z-index: 3500; pointer-events: none; animation: dropIn 0.8s ease-out forwards; }
+        @keyframes dropIn {
+            0% { transform: translateY(-40px) scale(1.3); opacity: 0; }
+            50% { transform: translateY(5px) scale(0.9); opacity: 1; }
+            70% { transform: translateY(-3px) scale(1.05); }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
         }
-        .user-dot {
-            width: 80px;
-            text-align: center;
+
+        .coin-indicator {
+            display: block; font-size: 9px; color: #ffd700; font-weight: bold; margin-top: 2px;
+            text-shadow: 0 0 3px rgba(0,0,0,0.6); background: rgba(0,0,0,0.5);
+            border-radius: 10px; padding: 1px 5px; line-height: 1.2;
         }
-        .avatar {
-            width: 50px;
-            height: 50px;
-            background: #34a853;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto;
-            font-weight: bold;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+
+        .gift-overlay-new { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(12px); z-index: 6000; justify-content: center; align-items: flex-end; }
+        .gift-overlay-new.active { display: flex; }
+
+        .gift-panel {
+            background: rgba(22, 22, 45, 0.95); backdrop-filter: blur(25px); width: 360px; height: 80vh;
+            border-radius: 32px 32px 0 0; padding: 25px 20px 15px; display: flex; flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 -10px 50px rgba(0, 0, 0, 0.6);
+            animation: slideUp 0.5s ease; position: relative; color: white;
         }
-        .btn-group { display: flex; gap: 10px; }
-        button {
-            flex: 1;
-            padding: 15px;
-            font-size: 16px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: 0.3s;
-            font-weight: bold;
-        }
-        .join-btn { background: #28a745; color: white; }
-        .leave-btn { background: #dc3545; color: white; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
-        button:hover:not(:disabled) { opacity: 0.8; transform: translateY(-2px); }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .coin-ring { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 8px; background: rgba(255, 215, 0, 0.1); backdrop-filter: blur(10px); border: 2px solid rgba(255, 215, 0, 0.4); border-radius: 50px; padding: 6px 14px; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3); z-index: 10; }
+        .coin-icon { font-size: 24px; }
+        .coin-amount { font-size: 18px; font-weight: 700; color: #ffd700; }
+
+        .profile-area { display: flex; justify-content: center; margin-bottom: 15px; margin-top: 20px; }
+        .profile-pic-gift { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255, 255, 255, 0.25); }
+
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 0 10px; }
+        .panel-header h3 { font-size: 20px; font-weight: 700; color: #f8f9fa; }
+        .close-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        .gift-grid-new { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; overflow-y: auto; flex: 1; padding: 0 5px 15px; }
+        .gift-item-new { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+        .gift-item-new.selected .gift-box-new { border: 3px solid #ffd700; box-shadow: 0 0 20px rgba(255,215,0,0.6); }
+        .gift-box-new { width: 100%; aspect-ratio: 1/1; background: rgba(15,25,45,0.7); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); overflow: hidden; position: relative; font-size: 30px; }
+        .gift-box-new img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
+        .gift-label-new { background: rgba(255,51,102,0.2); border: 1px solid rgba(255,51,102,0.3); color: #ff7b9c; font-weight: 700; font-size: 13px; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .gift-price-new { font-size: 11px; font-weight: 600; color: #ff5252; background: rgba(255,82,82,0.15); padding: 2px 6px; border-radius: 10px; }
+
+        .send-btn-container { display: flex; justify-content: center; margin-top: 10px; height: 50px; }
+        .send-btn-new { display: none; background: linear-gradient(135deg, #f1c40f, #f39c12); border: none; color: #000; font-weight: 700; font-size: 18px; padding: 12px 40px; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 15px rgba(243,156,18,0.4); }
+        .send-btn-new.show { display: inline-block; }
+
+        .video-overlay-new { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 7000; justify-content: center; align-items: center; }
+        .video-overlay-new.active { display: flex; }
+        #introVideo { width: 100%; height: 100%; object-fit: cover; transition: transform 0.05s linear, opacity 0.05s linear, border-radius 0.3s; }
+
+        .emoji-overlay-new { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 7000; justify-content: center; align-items: center; }
+        .emoji-overlay-new.active { display: flex; }
+        .big-emoji { font-size: 150px; transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.6s; transform: scale(1); opacity: 1; }
+        .big-emoji.shrink { transform: scale(0.1) translateY(100px); opacity: 0; }
+
+        .fly-gift-to-seat { position: fixed; font-size: 50px; z-index: 8000; pointer-events: none; transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94); filter: drop-shadow(0 0 15px gold); transform: scale(1); }
+
+        @media (min-width: 600px) { .gift-grid-new { grid-template-columns: repeat(5, 1fr); } }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Gaddy-Pro Voice Club</h1>
-    <p>চ্যানেল: <span style="color:#e91e63; font-weight:bold;">GaddyProTest</span></p>
-
-    <div id="status" class="status-card">অবস্থা: অফলাইন</div>
-
-    <div class="user-list" id="user-container">
+<div class="app-container">
+    <div class="top-header">
+        <div class="profile-group" onclick="togglePage('settingsPage', true)">
+            <img src="https://via.placeholder.com/40" id="headerAvatar" class="group-avatar">
+            <div><span id="headerGroupName" style="font-size:14px; font-weight:bold;">n {mohj}</span><br><span style="font-size:10px; color:#888;">সদস্য: 7</span></div>
         </div>
+        <div class="header-icons"><span>➦</span><span onclick="togglePage('exitPage', true)" style="cursor:pointer">✕</span></div>
+    </div>
 
-    <div class="btn-group">
-        <button id="joinBtn" class="join-btn" onclick="join()">রুমে প্রবেশ করুন</button>
-        <button id="leaveBtn" class="leave-btn" onclick="leave()" disabled>বেরিয়ে যান</button>
+    <div class="status-container">
+        <div class="status-msg" id="displayTopic">আমি তোমাকে ভালোবাসি 💘</div>
+        <span onclick="openTopicEditor()" style="cursor:pointer; color:#00c3ff;">✎</span>
+    </div>
+    <div id="topic-editor">
+        <input type="text" id="topicInput" style="width:75%; padding:8px;" placeholder="টপিক লিখুন...">
+        <button onclick="saveTopic()" style="padding:8px 15px; background:#00c3ff; color:white; border:none; border-radius:5px;">ওকে</button>
+    </div>
+
+    <div class="seats-grid" id="seatsContainer">
+        <div class="seat-item" onclick="handleSeatClick(this, 'host')">
+            <div class="circle" style="border:2px solid #8bc34a;">🎤<span class="mute-badge">🔇</span></div>
+            <div class="label">হোস্ট</div>
+        </div>
+    </div>
+
+    <div class="listener-section">
+        <p style="color:#888; font-size:12px; margin-bottom:10px;">শ্রোতা</p>
+        <div id="bottom-profile">
+            <div class="avatar-l"><span class="mute-badge">🔇</span></div>
+            <div class="label" style="text-align:center;">MOHAJ</div>
+        </div>
+    </div>
+
+    <div class="footer-nav">
+        <div style="display:flex; gap:12px;">
+            <div class="nav-btn" id="micTrigger">🎤</div>
+            <div class="nav-btn" id="emojiTrigger">😊</div>
+        </div>
+        <div style="display:flex; gap:12px;">
+            <div class="nav-btn" id="giftTrigger" style="background:#00c3ff; color:white;">🎁</div>
+        </div>
+    </div>
+
+    <div class="full-page" id="settingsPage">
+        <div onclick="togglePage('settingsPage', false)" style="cursor:pointer; margin-bottom:20px; font-weight:bold;">⬅ গ্রুপ সেটিংস</div>
+        <div style="text-align:center;">
+            <div id="cropper-container"></div>
+            <button onclick="document.getElementById('fileInput').click()" style="padding:8px; margin-bottom:10px;">ছবি বাছুন</button>
+            <input type="file" id="fileInput" hidden onchange="initCrop(event)">
+            <input type="text" id="gNameInput" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:5px;" placeholder="গ্রুপের নতুন নাম...">
+            <button onclick="applySettings()" style="width:100%; padding:12px; background:#00c3ff; color:white; border:none; margin-top:20px; border-radius:5px; font-weight:bold;">সেভ করুন</button>
+        </div>
+    </div>
+
+    <div class="full-page" id="exitPage">
+        <div style="height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+            <h2 style="margin-bottom:20px;">বাহির হতে চান?</h2>
+            <div style="display:flex; gap:20px; width:100%;">
+                <button onclick="togglePage('exitPage', false)" style="flex:1; padding:15px; border:none; border-radius:8px;">না</button>
+                <button onclick="location.reload()" style="flex:1; padding:15px; border:none; border-radius:8px; background:red; color:white;">হ্যাঁ</button>
+            </div>
+        </div>
     </div>
 </div>
 
+<div class="overlay" id="overlay" onclick="closeAllMenus()"></div>
+
+<div class="bottom-sheet" id="emptySeatMenu">
+    <div class="menu-option" onclick="takeMic()"><span>🛋️</span> মাইক নিন</div>
+    <div class="menu-option"><span>➕</span> স্পিকারদের আমন্ত্রণ করুন</div>
+    <div class="menu-option" onclick="toggleLock()"><span id="lIcon">🔒</span> <span id="lText">মাইক লক করুন</span></div>
+</div>
+
+<div class="bottom-sheet" id="activeUserMenu">
+    <div class="menu-option"><span>👤</span> প্রোফাইল দেখুন</div>
+    <div class="menu-option" onclick="sendGiftToSeat()"><span>🎁</span> গিফট পাঠান</div>
+    <div class="menu-option" style="color:red;" onclick="releaseMic()"><span>🛋️</span> মাইক শেষ করুন</div>
+</div>
+
+<div class="bottom-sheet" id="emojiPanel">
+    <div style="text-align:center; font-weight:bold; padding:10px;">ইমোজি রিঅ্যাক্ট করুন</div>
+    <div class="emoji-grid" id="emojiGrid"></div>
+</div>
+
+<div class="bottom-sheet" id="micPanel">
+    <div style="text-align:center; font-weight:bold; padding:10px;">মাইক কন্ট্রোল</div>
+    <div class="menu-option" id="muteOption" onclick="toggleMute()">
+        <span id="micOptionIcon">🔇</span> <span id="micOptionText">মাইক বন্ধ করুন</span>
+    </div>
+</div>
+
+<!-- গিফট ওভারলে -->
+<div class="gift-overlay-new" id="giftOverlayNew">
+    <div class="gift-panel">
+        <div class="coin-ring"><span class="coin-icon">🪙</span><span class="coin-amount" id="coinBalance">50000</span></div>
+        <div class="profile-area"><img class="profile-pic-gift" id="giftTargetImg" src="https://via.placeholder.com/70" alt="Profile"></div>
+        <div class="panel-header"><h3>🎁 উপহার পাঠান</h3><button class="close-btn" id="closeGiftBtnNew">&times;</button></div>
+        <div class="gift-grid-new" id="giftGridNew"></div>
+        <div class="send-btn-container"><button class="send-btn-new" id="sendButtonNew">📤 ছেন</button></div>
+    </div>
+</div>
+
+<div class="video-overlay-new" id="videoOverlayNew"><video id="introVideo" preload="auto" playsinline></video></div>
+<div class="emoji-overlay-new" id="emojiOverlayNew"><span class="big-emoji" id="bigEmoji">🎉</span></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
+<script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.11.0.js"></script>
 <script>
-    // আপনার দেওয়া App ID
-    const APP_ID = "3e98fdc6be38445f9e121e0ca61fef95"; 
-    const CHANNEL = "GaddyProTest"; 
+    // ---------- AgoraRTC কনফিগারেশন ----------
+    const APP_ID = "3e98fdc6be38445f9e121e0ca61fef95";
+    const CHANNEL = "GaddyProTest";
 
-    const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-    let localAudioTrack = null;
+    let client, localAudioTrack = null;
+    let isMuted = false;
+    let isPublished = false;
+    let userCurrentSeat = null;
 
-    async function join() {
+    async function initAgora() {
         try {
-            document.getElementById("joinBtn").disabled = true;
-            
-            // এগোরা চ্যানেলে জয়েন করা (টোকেন ছাড়া)
-            const uid = await client.join(APP_ID, CHANNEL, null);
-            
-            // নিজের অডিও সোর্স তৈরি ও পাবলিশ করা
+            client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+            // চ্যানেলে জয়েন (শ্রোতা হিসেবে)
+            await client.join(APP_ID, CHANNEL, null, null);
+            console.log("Agora channel joined");
+
+            // রিমোট ইউজার সাবস্ক্রাইব
+            client.on("user-published", async (user, mediaType) => {
+                await client.subscribe(user, mediaType);
+                if (mediaType === "audio") {
+                    user.audioTrack.play();
+                }
+            });
+
+            client.on("user-unpublished", (user) => {
+                // অডিও ট্র্যাক বন্ধ
+            });
+
+        } catch (err) {
+            console.error("Agora init error:", err);
+            alert("ভয়েস কানেক্ট করতে সমস্যা হচ্ছে, রিফ্রেশ করুন।");
+        }
+    }
+
+    async function publishAudio() {
+        if (!client || isPublished) return;
+        try {
             localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
             await client.publish([localAudioTrack]);
-
-            document.getElementById("status").innerText = "অবস্থা: আপনি এখন রুমে আছেন";
-            document.getElementById("status").style.background = "#d4edda";
-            document.getElementById("leaveBtn").disabled = false;
-
-            // নিজের জন্য একটি আইকন যোগ করা
-            addUserToUI(uid, "আপনি");
-
-            console.log("Joined with UID: " + uid);
-        } catch (error) {
-            console.error(error);
-            alert("কানেক্ট করা যাচ্ছে না! ড্যাশবোর্ডে 'Testing Mode' চেক করুন।");
-            document.getElementById("joinBtn").disabled = false;
+            isPublished = true;
+            console.log("Audio published");
+        } catch (e) {
+            console.error("Publish error:", e);
+            alert("মাইক চালু করা গেল না।");
         }
     }
 
-    async function leave() {
-        if (localAudioTrack) {
-            localAudioTrack.stop();
+    async function unpublishAudio() {
+        if (!client || !isPublished || !localAudioTrack) return;
+        try {
+            await client.unpublish([localAudioTrack]);
             localAudioTrack.close();
+            localAudioTrack = null;
+            isPublished = false;
+            console.log("Audio unpublished");
+        } catch (e) {
+            console.error("Unpublish error:", e);
         }
-        await client.leave();
-        
-        document.getElementById("user-container").innerHTML = "";
-        document.getElementById("status").innerText = "অবস্থা: অফলাইন";
-        document.getElementById("status").style.background = "#e8f0fe";
-        document.getElementById("joinBtn").disabled = false;
-        document.getElementById("leaveBtn").disabled = true;
     }
 
-    // অন্য কেউ জয়েন করলে বা অডিও পাবলিশ করলে
-    client.on("user-published", async (user, mediaType) => {
-        await client.subscribe(user, mediaType);
-        if (mediaType === "audio") {
-            user.audioTrack.play();
-            addUserToUI(user.uid, "বন্ধু");
+    async function toggleMuteAgora() {
+        if (!localAudioTrack) return;
+        try {
+            if (isMuted) {
+                await localAudioTrack.setEnabled(true);
+            } else {
+                await localAudioTrack.setEnabled(false);
+            }
+        } catch (e) {
+            console.error("Mute toggle error:", e);
+        }
+    }
+
+    // ---------- বিদ্যমান UI ফাংশন আপডেট ----------
+
+    async function takeMic() {
+        if (!userCurrentSeat) {
+            // প্রথমবার মাইক নিচ্ছে, publish করতে হবে
+        } else {
+            // ইতিমধ্যেই সিটে আছে, কিছু করবে না
+            alert("আপনি ইতিমধ্যে একটি সিটে আছেন।");
+            return;
+        }
+
+        if (!activeSeat) return;
+        if (activeSeat.querySelector('.lock-overlay').style.display === 'block') {
+            alert("লক!");
+            return;
+        }
+
+        hideCoinOnSeat(activeSeat);
+        // যদি আগের প্রকাশিত ট্র্যাক থাকে তবে সরান
+        if (isPublished) await unpublishAudio();
+
+        // সিট ভিজ্যুয়াল আপডেট
+        activeSeat.querySelector('.circle').innerHTML = `<img src="https://via.placeholder.com/55" class="user-img"><span class="lock-overlay">🔒</span><span class="mute-badge">🔇</span>`;
+        activeSeat.querySelector('.label').innerText = "MOHAJ";
+        document.getElementById('bottom-profile').style.visibility = 'hidden';
+        userCurrentSeat = activeSeat;
+        isMuted = false;
+        applyMuteBadge();
+
+        // আগোরা পাবলিশ
+        await publishAudio();
+        closeAllMenus();
+    }
+
+    async function releaseMic(isSwitching = false) {
+        if (!userCurrentSeat) return;
+
+        hideCoinOnSeat(userCurrentSeat);
+        const lbl = userCurrentSeat.querySelector('.label');
+        userCurrentSeat.querySelector('.circle').innerHTML = `🛋️<span class="lock-overlay">🔒</span><span class="mute-badge">🔇</span>`;
+        lbl.innerText = lbl.getAttribute('data-num') || "হোস্ট";
+
+        // আনপাবলিশ এবং ট্র্যাক সরান
+        await unpublishAudio();
+
+        if (!isSwitching) {
+            document.getElementById('bottom-profile').style.visibility = 'visible';
+        }
+        userCurrentSeat = null;
+        closeAllMenus();
+        // মাইক প্যানেল UI আপডেট
+        updateMicPanelUI();
+    }
+
+    async function toggleMute() {
+        if (!userCurrentSeat || !isPublished) return;
+        isMuted = !isMuted;
+        await toggleMuteAgora();
+        applyMuteBadge();
+        updateMicPanelUI();
+        closeAllMenus();
+    }
+
+    function applyMuteBadge() {
+        if (!userCurrentSeat) return;
+        const badge = userCurrentSeat.querySelector('.mute-badge');
+        if (badge) badge.style.display = isMuted ? 'block' : 'none';
+    }
+
+    function updateMicPanelUI() {
+        const icon = document.getElementById('micOptionIcon');
+        const text = document.getElementById('micOptionText');
+        if (isMuted) {
+            icon.textContent = '🎤';
+            text.textContent = 'মাইক চালু করুন';
+        } else {
+            icon.textContent = '🔇';
+            text.textContent = 'মাইক বন্ধ করুন';
+        }
+    }
+
+    // ---------- বাকি ফাংশন অপরিবর্তিত (সিট জেনারেট, ইমোজি, গিফট ইত্যাদি) ----------
+    const container = document.getElementById('seatsContainer');
+    for(let i=2; i<=10; i++){
+        container.innerHTML += `<div class="seat-item" onclick="handleSeatClick(this, ${i})"><div class="circle">🛋️<span class="lock-overlay">🔒</span><span class="mute-badge">🔇</span></div><div class="label" data-num="${i}">${i}</div></div>`;
+    }
+
+    let activeSeat = null;
+    let giftTargetSeat = null;
+    let croppie = null;
+    let currentSentGift = null;
+
+    const emojiList = ['😂', '❤️', '😍', '🔥', '😭', '😡', '👍', '🎉', '💔', '🤣', '😎', '🥳', '😇', '💋', '🙏'];
+    const emojiGrid = document.getElementById('emojiGrid');
+    emojiList.forEach(emoji => {
+        const div = document.createElement('div');
+        div.className = 'emoji-item';
+        div.textContent = emoji;
+        div.addEventListener('click', () => sendReaction(emoji));
+        emojiGrid.appendChild(div);
+    });
+
+    document.getElementById('emojiTrigger').addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.bottom-sheet').forEach(m => m.classList.remove('show'));
+        document.getElementById('emojiPanel').classList.add('show');
+        document.getElementById('overlay').style.display = 'block';
+    });
+
+    function sendReaction(emoji) {
+        closeAllMenus();
+        let targetElement = userCurrentSeat ? userCurrentSeat.querySelector('.circle') : document.querySelector('#bottom-profile .avatar-l');
+        if(!targetElement) return;
+        const floatEl = document.createElement('div');
+        floatEl.className = 'floating-emoji';
+        floatEl.textContent = emoji;
+        targetElement.style.position = 'relative';
+        targetElement.appendChild(floatEl);
+        floatEl.addEventListener('animationend', () => floatEl.remove());
+    }
+
+    document.getElementById('micTrigger').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!userCurrentSeat) return alert('আগে সিটে বসুন।');
+        document.querySelectorAll('.bottom-sheet').forEach(m => m.classList.remove('show'));
+        updateMicPanelUI();
+        document.getElementById('micPanel').classList.add('show');
+        document.getElementById('overlay').style.display = 'block';
+    });
+
+    function handleSeatClick(el, id) {
+        activeSeat = el;
+        document.getElementById('overlay').style.display = 'block';
+        document.querySelectorAll('.bottom-sheet').forEach(m => m.classList.remove('show'));
+        if(userCurrentSeat === el) {
+            document.getElementById('activeUserMenu').classList.add('show');
+        } else {
+            const isL = el.querySelector('.lock-overlay').style.display === 'block';
+            document.getElementById('lText').innerText = isL ? "মাইক আনলক করুন" : "মাইক লক করুন";
+            document.getElementById('emptySeatMenu').classList.add('show');
+        }
+    }
+
+    function toggleLock() {
+        const l = activeSeat.querySelector('.lock-overlay');
+        l.style.display = (l.style.display === 'block') ? 'none' : 'block';
+        closeAllMenus();
+    }
+
+    function sendGiftToSeat() {
+        giftTargetSeat = activeSeat;
+        closeAllMenus();
+        openGiftPanelForSeat(giftTargetSeat);
+    }
+
+    document.getElementById('giftTrigger').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!userCurrentSeat) return alert('আগে সিটে বসুন।');
+        giftTargetSeat = userCurrentSeat;
+        document.querySelectorAll('.bottom-sheet').forEach(m => m.classList.remove('show'));
+        document.getElementById('overlay').style.display = 'none';
+        openGiftPanelForSeat(giftTargetSeat);
+    });
+
+    function openGiftPanelForSeat(seat) {
+        const avatar = seat.querySelector('.user-img');
+        const targetImg = document.getElementById('giftTargetImg');
+        targetImg.src = avatar ? avatar.src : 'https://via.placeholder.com/70';
+        selectedGiftId = null;
+        renderGifts();
+        giftOverlayNew.classList.add('active');
+    }
+
+    const GIFT2_IMAGE_URL = 'https://raw.githubusercontent.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/main/IMG_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A6%E0%A7%A8%E0%A7%A6%E0%A7%AB%E0%A7%A9%E0%A7%A8.jpg';
+    const GIFT2_VIDEO_URL = 'https://github.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/raw/refs/heads/main/VID_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A6%E0%A7%A8%E0%A7%A6%E0%A7%AA%E0%A7%A6%E0%A7%A6.mp4';
+    const GIFT3_IMAGE_URL = 'https://raw.githubusercontent.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/main/IMG_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A6%E0%A7%A7%E0%A7%A6%E0%A7%A6%E0%A7%AB%E0%A7%A7.jpg';
+    const GIFT3_VIDEO_URL = 'https://github.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/raw/refs/heads/main/VID_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A6%E0%A7%A6%E0%A7%AB%E0%A7%AA%E0%A7%A9%E0%A7%AE.mp4';
+    const GIFT4_IMAGE_URL = 'https://raw.githubusercontent.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/main/IMG_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A8%E0%A7%A7%E0%A7%A6%E0%A7%AA%E0%A7%A6%E0%A7%A7.jpg';
+    const GIFT4_VIDEO_URL = 'https://github.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/raw/refs/heads/main/VID_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A8%E0%A7%A7%E0%A7%A6%E0%A7%A7%E0%A7%A9%E0%A7%AA.mp4';
+
+    const gifts = [
+        { id: 1, type: 'video', imgSrc: 'https://raw.githubusercontent.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/main/IMG_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A6%E0%A7%A8%E0%A7%AB%E0%A7%AF%E0%A7%A6%E0%A7%AA.jpg', videoSrc: 'https://github.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/raw/refs/heads/main/lv_0_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD%E0%A7%A6%E0%A7%A8%E0%A7%AB%E0%A7%AD%E0%A7%AB%E0%A7%A6.mp4', price: 1000, name: 'গিফট ১', icon: '🎁' },
+        { id: 2, type: 'video', imgSrc: GIFT2_IMAGE_URL, videoSrc: GIFT2_VIDEO_URL, price: 2500, name: 'গিফট ২', icon: '🎁' },
+        { id: 3, type: 'video', imgSrc: GIFT3_IMAGE_URL, videoSrc: GIFT3_VIDEO_URL, price: 3000, name: 'গিফট ৩', icon: '🎁' },
+        { id: 4, type: 'video', imgSrc: GIFT4_IMAGE_URL, videoSrc: GIFT4_VIDEO_URL, price: 5000, name: 'গিফট ৪', icon: '🎁' },
+        { id: 5, type: 'emoji', emoji: '🎉', price: 5, name: 'পার্টি', icon: '🎉' },
+        { id: 6, type: 'emoji', emoji: '❤️', price: 10, name: 'হার্ট', icon: '❤️' },
+        { id: 7, type: 'emoji', emoji: '🌟', price: 15, name: 'স্টার', icon: '🌟' },
+        { id: 8, type: 'emoji', emoji: '🔥', price: 20, name: 'ফায়ার', icon: '🔥' },
+        { id: 9, type: 'emoji', emoji: '💎', price: 25, name: 'ডায়মন্ড', icon: '💎' },
+        { id: 10, type: 'emoji', emoji: '🎈', price: 50, name: 'বেলুন', icon: '🎈' },
+        { id: 11, type: 'emoji', emoji: '🎵', price: 60, name: 'মিউজিক', icon: '🎵' },
+        { id: 12, type: 'emoji', emoji: '👑', price: 80, name: 'ক্রাউন', icon: '👑' }
+    ];
+
+    let selectedGiftId = null;
+    let coinBalance = 50000;
+
+    const giftOverlayNew = document.getElementById('giftOverlayNew');
+    const giftGridNew = document.getElementById('giftGridNew');
+    const sendBtnNew = document.getElementById('sendButtonNew');
+    const closeGiftBtnNew = document.getElementById('closeGiftBtnNew');
+    const coinBalanceSpan = document.getElementById('coinBalance');
+    const videoOverlayNew = document.getElementById('videoOverlayNew');
+    const introVideo = document.getElementById('introVideo');
+    const emojiOverlayNew = document.getElementById('emojiOverlayNew');
+    const bigEmoji = document.getElementById('bigEmoji');
+
+    function updateCoinDisplay() { coinBalanceSpan.textContent = coinBalance.toLocaleString(); }
+
+    function renderGifts() {
+        giftGridNew.innerHTML = '';
+        gifts.forEach(gift => {
+            const div = document.createElement('div');
+            div.className = `gift-item-new ${selectedGiftId === gift.id ? 'selected' : ''}`;
+            div.dataset.giftId = gift.id;
+            let boxContent = gift.type === 'video' ? `<img src="${gift.imgSrc}" alt="Gift"><span style="display:none;">🎁</span>` : `<span style="font-size:32px;">${gift.emoji}</span>`;
+            div.innerHTML = `<div class="gift-box-new">${boxContent}</div><div class="gift-label-new">${gift.id}</div><div class="gift-price-new">🪙 ${gift.price}</div>`;
+            div.addEventListener('click', () => selectGift(gift.id));
+            giftGridNew.appendChild(div);
+        });
+        sendBtnNew.classList.toggle('show', !!selectedGiftId);
+    }
+
+    function selectGift(id) { selectedGiftId = id; renderGifts(); }
+
+    sendBtnNew.addEventListener('click', () => {
+        const gift = gifts.find(g => g.id === selectedGiftId);
+        if (!gift) return;
+        if (coinBalance < gift.price) return alert('যথেষ্ট কয়েন নেই!');
+        coinBalance -= gift.price;
+        updateCoinDisplay();
+        currentSentGift = gift;
+        giftOverlayNew.classList.remove('active');
+
+        if (gift.type === 'video') {
+            introVideo.src = gift.videoSrc;
+            introVideo.currentTime = 0;
+            introVideo.muted = false;
+            Object.assign(introVideo.style, { transform: 'scale(1)', opacity: '1', borderRadius: '0' });
+            videoOverlayNew.classList.add('active');
+            introVideo.play().catch(()=>{});
+        } else {
+            bigEmoji.textContent = gift.emoji;
+            bigEmoji.classList.remove('shrink');
+            emojiOverlayNew.classList.add('active');
+            setTimeout(() => bigEmoji.classList.add('shrink'), 100);
+            setTimeout(() => {
+                emojiOverlayNew.classList.remove('active');
+                if (giftTargetSeat) animateGiftToSeat(giftTargetSeat, gift);
+            }, 900);
         }
     });
 
-    // কেউ রুম ছেড়ে চলে গেলে
-    client.on("user-left", (user) => {
-        const userDiv = document.getElementById(`user-${user.uid}`);
-        if (userDiv) userDiv.remove();
+    introVideo.addEventListener('ended', () => {
+        videoOverlayNew.classList.remove('active');
+        if (giftTargetSeat && currentSentGift) animateGiftToSeat(giftTargetSeat, currentSentGift);
+    });
+    videoOverlayNew.addEventListener('click', () => {
+        videoOverlayNew.classList.remove('active');
+        introVideo.pause(); introVideo.src = '';
+        if (giftTargetSeat && currentSentGift) animateGiftToSeat(giftTargetSeat, currentSentGift);
     });
 
-    // স্ক্রিনে ইউজার আইকন দেখানোর ফাংশন
-    function addUserToUI(uid, label) {
-        if (document.getElementById(`user-${uid}`)) return;
-        
-        const userDiv = document.createElement("div");
-        userDiv.className = "user-dot";
-        userDiv.id = `user-${uid}`;
-        userDiv.innerHTML = `
-            <div class="avatar">${label === "আপনি" ? "Me" : "User"}</div>
-            <p style="font-size:11px; margin-top:5px;">ID: ${uid}</p>
-        `;
-        document.getElementById("user-container").appendChild(userDiv);
+    function animateGiftToSeat(targetSeat, gift) {
+        const circle = targetSeat.querySelector('.circle');
+        if (!circle) return;
+        const fly = document.createElement('div');
+        fly.className = 'fly-gift-to-seat';
+        fly.textContent = gift.icon;
+        document.body.appendChild(fly);
+
+        const circleRect = circle.getBoundingClientRect();
+        const startX = window.innerWidth/2 - 25, startY = window.innerHeight/2 - 25;
+        const endX = circleRect.left + circleRect.width/2 - 25, endY = circleRect.top + circleRect.height/2 - 25;
+        Object.assign(fly.style, { left: startX+'px', top: startY+'px' });
+
+        requestAnimationFrame(() => {
+            Object.assign(fly.style, { transform: 'scale(0.3)', left: endX+'px', top: endY+'px', opacity: '0.8' });
+        });
+
+        fly.addEventListener('transitionend', () => {
+            fly.remove();
+            const drop = document.createElement('div');
+            drop.className = 'drop-gift-on-seat';
+            drop.textContent = gift.icon;
+            circle.appendChild(drop);
+            drop.addEventListener('animationend', () => drop.remove());
+            showCoinOnSeat(targetSeat, gift.price);
+        });
     }
+
+    function showCoinOnSeat(seatItem, amount) {
+        if (!seatItem) return;
+        const existing = seatItem.querySelector('.coin-indicator');
+        if (existing) { clearTimeout(parseInt(existing.dataset.timeout)); existing.remove(); }
+        const coinDiv = document.createElement('div');
+        coinDiv.className = 'coin-indicator';
+        coinDiv.textContent = `🪙 ${amount}`;
+        seatItem.appendChild(coinDiv);
+        const timeout = setTimeout(() => { if (coinDiv.parentNode) coinDiv.remove(); }, 3000);
+        coinDiv.dataset.timeout = timeout;
+    }
+
+    function hideCoinOnSeat(seatItem) {
+        if (!seatItem) return;
+        const coinDiv = seatItem.querySelector('.coin-indicator');
+        if (coinDiv) { clearTimeout(parseInt(coinDiv.dataset.timeout)); coinDiv.remove(); }
+    }
+
+    closeGiftBtnNew.addEventListener('click', () => giftOverlayNew.classList.remove('active'));
+    giftOverlayNew.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
+
+    function openTopicEditor() { document.getElementById('topic-editor').style.display = 'block'; }
+    function saveTopic() {
+        const val = document.getElementById('topicInput').value;
+        if(val) document.getElementById('displayTopic').innerText = val;
+        document.getElementById('topic-editor').style.display = 'none';
+    }
+    function initCrop(e) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            document.getElementById('cropper-container').style.display = 'block';
+            if(croppie) croppie.destroy();
+            croppie = new Croppie(document.getElementById('cropper-container'), {
+                viewport: { width: 100, height: 100, type: 'square' },
+                boundary: { width: 200, height: 200 }
+            });
+            croppie.bind({ url: ev.target.result });
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    }
+    function applySettings() {
+        const name = document.getElementById('gNameInput').value;
+        if(name) document.getElementById('headerGroupName').innerText = name;
+        if(croppie) croppie.result('base64').then(img => { document.getElementById('headerAvatar').src = img; togglePage('settingsPage', false); });
+        else togglePage('settingsPage', false);
+    }
+    function togglePage(id, show) { document.getElementById(id).classList.toggle('active', show); }
+    function closeAllMenus() {
+        document.querySelectorAll('.bottom-sheet').forEach(m => m.classList.remove('show'));
+        document.getElementById('overlay').style.display = 'none';
+    }
+
+    updateCoinDisplay();
+    renderGifts();
+
+    // পেজ লোডেই আগোরা চ্যানেলে জয়েন করিয়ে দিন (শ্রোতা মোড)
+    initAgora();
 </script>
-
 </body>
 </html>
