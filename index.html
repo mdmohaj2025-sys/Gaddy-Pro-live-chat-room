@@ -99,7 +99,6 @@
 <div class="bg-particles" id="particles"></div>
 <div id="toastContainer"></div>
 <div class="app-container">
-    
     <div class="screen active" id="splashScreen">
         <div class="splash-logo-wrapper">
             <div class="splash-ring-outer"></div>
@@ -126,30 +125,20 @@
                 <input type="tel" id="phoneNumber" placeholder="1XXXXXXXXX" maxlength="15" style="flex:1;background:transparent;border:none;padding:14px 16px;font-size:16px;color:var(--text);outline:none;">
             </div>
         </div>
-        
-        <div id="recaptcha-container" style="margin-bottom: 15px;"></div>
-        
-        <button id="sendOtpBtn" style="width:100%;padding:15px;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;background:var(--ring-gradient);color:#fff;box-shadow:0 8px 30px rgba(108,92,231,0.35);" onclick="submitPhone()">চালিয়ে যান →</button>
-    </div>
+        <button style="width:100%;padding:15px;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;background:var(--ring-gradient);color:#fff;box-shadow:0 8px 30px rgba(108,92,231,0.35);" onclick="submitPhone()">চালিয়ে যান →</button>
 
-    <div class="screen" id="otpScreen">
-        <div class="screen-header" style="text-align:center;margin-bottom:28px;">
-            <span style="display:inline-block;font-size:12px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:8px;background:rgba(253,121,168,0.1);padding:4px 14px;border-radius:20px;">ওটিপি যাচাই</span>
-            <h2 style="font-size:26px;font-weight:700;margin:6px 0;background:linear-gradient(135deg,#e8e8f0,#c4c4d8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">কোড দিন</h2>
-            <p style="color:var(--text-secondary);font-size:14px;">আপনার নম্বরে পাঠানো ৬-ডিজিটের কোডটি দিন</p>
+        <div style="display:flex;align-items:center;margin:24px 0;">
+            <div style="flex:1;height:1px;background:rgba(255,255,255,0.1);"></div>
+            <span style="padding:0 15px;color:var(--text-secondary);font-size:13px;font-weight:600;">অথবা</span>
+            <div style="flex:1;height:1px;background:rgba(255,255,255,0.1);"></div>
         </div>
-        <div style="margin-bottom:18px;">
-            <label style="display:block;font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">ওটিপি (OTP)</label>
-            <div style="display:flex;align-items:center;background:var(--surface2);border-radius:10px;border:2px solid rgba(255,255,255,0.08);">
-                <span style="padding:0 12px 0 16px;font-size:18px;color:var(--text-secondary);">💬</span>
-                <input type="number" id="otpCode" placeholder="123456" style="flex:1;background:transparent;border:none;padding:14px 16px;font-size:20px;color:var(--text);outline:none;letter-spacing:6px;">
-            </div>
-        </div>
-        <button id="verifyOtpBtn" style="width:100%;padding:15px;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;background:var(--ring-gradient);color:#fff;box-shadow:0 8px 30px rgba(108,92,231,0.35);" onclick="verifyOTP()">যাচাই করুন ✓</button>
-        <button style="width:100%;padding:15px;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;background:transparent;color:var(--text);border:2px solid rgba(255,255,255,0.2);margin-top:8px;" onclick="goToScreen('phoneScreen')">← ফিরে যান</button>
+        
+        <button style="display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:14px;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;background:#ffffff;color:#333;box-shadow:0 4px 15px rgba(0,0,0,0.2);" onclick="signInWithGoogle()">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="22" alt="Google">
+            Google দিয়ে চালিয়ে যান
+        </button>
     </div>
-
-    <div class="screen" id="passwordScreen">
+        <div class="screen" id="passwordScreen">
         <div class="screen-header" style="text-align:center;margin-bottom:28px;">
             <span style="display:inline-block;font-size:12px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:8px;background:rgba(253,121,168,0.1);padding:4px 14px;border-radius:20px;">ধাপ ২ / ৪</span>
             <h2 style="font-size:26px;font-weight:700;margin:6px 0;background:linear-gradient(135deg,#e8e8f0,#c4c4d8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">পাসওয়ার্ড দিন</h2>
@@ -170,6 +159,7 @@
             </div>
         </div>
         <button style="width:100%;padding:15px;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;background:var(--ring-gradient);color:#fff;box-shadow:0 8px 30px rgba(108,92,231,0.35);" onclick="submitPassword()">চালিয়ে যান →</button>
+        <button style="width:100%;padding:15px;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;background:transparent;color:var(--text);border:2px solid rgba(255,255,255,0.2);margin-top:8px;" onclick="goToScreen('phoneScreen')">← ফিরে যান</button>
     </div>
     
     <div class="screen" id="profileScreen">
@@ -228,16 +218,16 @@
             </div>
         </div>
         <button style="width:100%;padding:15px;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;background:var(--ring-gradient);color:#fff;box-shadow:0 8px 30px rgba(108,92,231,0.35);" onclick="submitProfile()">সম্পন্ন করুন ✓</button>
+        <button style="width:100%;padding:15px;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;background:transparent;color:var(--text);border:2px solid rgba(255,255,255,0.2);margin-top:8px;" onclick="goToScreen('passwordScreen')">← ফিরে যান</button>
     </div>    
-    
-    <div class="screen" id="successScreen">
+        <div class="screen" id="successScreen">
         <div style="font-size:48px;margin-bottom:10px;text-align:center;">✅</div>
         <div class="screen-header" style="text-align:center;margin-bottom:28px;">
             <h2 style="font-size:26px;font-weight:700;margin:6px 0;background:linear-gradient(135deg,#e8e8f0,#c4c4d8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">স্বাগতম!</h2>
-            <p style="color:var(--text-secondary);font-size:14px;">আপনার অ্যাকাউন্ট তৈরি হয়েছে</p>
+            <p style="color:var(--text-secondary);font-size:14px;">আপনার ভয়েস অ্যাকাউন্ট তৈরি হয়েছে</p>
         </div>
         <div style="background:var(--surface2);border-radius:20px;padding:20px;border:1px solid rgba(255,255,255,0.1);text-align:center;margin-top:20px;box-shadow:0 20px 40px rgba(0,0,0,0.6);">
-            <div style="color:var(--text-secondary);font-size:12px;text-transform:uppercase;letter-spacing:3px;">আপনার ইউনিক আইডি</div>
+            <div style="color:var(--text-secondary);font-size:12px;text-transform:uppercase;letter-spacing:3px;">আপনার ইউনিক ভয়েস আইডি</div>
             <div id="uniqueIdDisplay" style="font-size:32px;font-weight:900;letter-spacing:2px;background:var(--ring-gradient2);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">MOI-XXXXXXXX</div>
             <p id="successName" style="color:var(--text-secondary);margin-top:8px;"></p>
         </div>
@@ -254,6 +244,7 @@
         font-size: 14px; font-weight: 600; z-index: 100; box-shadow: 0 10px 30px rgba(255,71,87,0.4);
         animation: toastIn 0.4s ease-out; pointer-events: none;
     }
+    .toast-success { background: var(--success); box-shadow: 0 10px 30px rgba(0,210,160,0.4); }
     @keyframes toastIn { from { opacity:0; transform:translateX(-50%) translateY(-20px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
     @media (max-width:480px) {
         .screen { padding:24px 16px; border-radius:22px; }
@@ -263,266 +254,67 @@
     }
 </style>
 
-<script type="module">
-    // Firebase Imports
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
 
-    /* নোট: আপনি ভার্সন 12.12.1 দিয়েছিলেন, কিন্তু Firebase-এর বর্তমান লেটেস্ট ভার্সন 10/11 সিরিজের। 
-      তাই কোড যেন ইরর না দেয় সেজন্য আমি সবচেয়ে স্ট্যাবল ভার্সন (10.12.2) ব্যবহার করেছি। 
-    */
-
-    // Your web app's Firebase configuration
+<script>
+    // ==========================================
+    // ফায়ারবেস কনফিগারেশন (আপনার আসল কোডগুলো এখানে বসান)
+    // ==========================================
     const firebaseConfig = {
-        apiKey: "AIzaSyDXwE6T6fOBBIbxWIMBPJoHN4PD9NXazKw",
-        authDomain: "moi-project-25509.firebaseapp.com",
-        databaseURL: "https://moi-project-25509-default-rtdb.firebaseio.com",
-        projectId: "moi-project-25509",
-        storageBucket: "moi-project-25509.firebasestorage.app",
-        messagingSenderId: "465225004410",
-        appId: "1:465225004410:web:e266146adb1ccaca4992c3",
-        measurementId: "G-NMR8T9SF67"
+        apiKey: "আপনার_API_KEY",
+        authDomain: "আপনার_প্রজেক্ট_ID.firebaseapp.com",
+        projectId: "আপনার_প্রজেক্ট_ID",
+        storageBucket: "আপনার_প্রজেক্ট_ID.appspot.com",
+        messagingSenderId: "আপনার_MESSAGING_SENDER_ID",
+        appId: "আপনার_APP_ID"
     };
 
     // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const analytics = getAnalytics(app);
-
-    // ---- Toast System ----
-    window.showToast = function(msg, isSuccess = false) {
-        const container = document.getElementById('toastContainer');
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        if (isSuccess) {
-            toast.style.background = 'var(--success)';
-            toast.style.boxShadow = '0 10px 30px rgba(0, 210, 160, 0.4)';
-        }
-        toast.textContent = msg;
-        container.appendChild(toast);
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transition = 'opacity 0.4s';
-            setTimeout(() => toast.remove(), 400);
-        }, 2500);
-    };
-
-    // ---- Navigation ----
-    window.goToScreen = function(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-    };
-
-    // ---- Splash Timer ----
-    setTimeout(() => {
-        document.getElementById('splashScreen').classList.remove('active');
-        document.getElementById('phoneScreen').classList.add('active');
-        setupRecaptcha(); // Splash শেষে Recaptcha লোড হবে
-    }, 3000);
-
-    // ---- Firebase Phone Auth Setup ----
-    let confirmationResultObj = null;
-
-    function setupRecaptcha() {
-        if (!window.recaptchaVerifier) {
-            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-                'size': 'normal',
-                'callback': (response) => {
-                    // reCAPTCHA solved
-                },
-                'expired-callback': () => {
-                    // Response expired. Ask user to solve reCAPTCHA again.
-                    window.showToast('reCAPTCHA মেয়াদ শেষ, আবার চেষ্টা করুন');
-                }
-            });
-            window.recaptchaVerifier.render();
-        }
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
     }
 
-    // ---- Phone Submit (OTP Send) ----
-    window.submitPhone = function() {
-        const code = document.getElementById('countryCodeInput').value.trim();
-        const number = document.getElementById('phoneNumber').value.trim();
-        
-        if (!code || !number || number.length < 5) return window.showToast('⚠️ কোড ও ফোন নম্বর দিন');
-        
-        const fullPhoneNumber = '+' + code + number;
-        const btn = document.getElementById('sendOtpBtn');
-        btn.textContent = "অপেক্ষা করুন...";
-        btn.disabled = true;
-
-        signInWithPhoneNumber(auth, fullPhoneNumber, window.recaptchaVerifier)
-            .then((confirmationResult) => {
-                // SMS sent
-                confirmationResultObj = confirmationResult;
-                window.userPhone = fullPhoneNumber;
-                btn.textContent = "চালিয়ে যান →";
-                btn.disabled = false;
-                window.showToast('✅ মোবাইলে ওটিপি পাঠানো হয়েছে!', true);
-                window.goToScreen('otpScreen');
-            })
-            .catch((error) => {
-                btn.textContent = "চালিয়ে যান →";
-                btn.disabled = false;
-                window.showToast('⚠️ সমস্যা হয়েছে: ' + error.message);
-                // Reset recaptcha on error
-                if(window.recaptchaVerifier) {
-                    window.recaptchaVerifier.render().then(function(widgetId) {
-                        grecaptcha.reset(widgetId);
-                    });
-                }
-            });
-    };
-
-    // ---- Verify OTP ----
-    window.verifyOTP = function() {
-        const otpCode = document.getElementById('otpCode').value.trim();
-        if(!otpCode || otpCode.length < 6) return window.showToast('⚠️ সঠিক ৬-ডিজিটের কোড দিন');
-
-        const btn = document.getElementById('verifyOtpBtn');
-        btn.textContent = "যাচাই হচ্ছে...";
-        btn.disabled = true;
-
-        confirmationResultObj.confirm(otpCode).then((result) => {
-            // User signed in successfully
+    // Google Sign-In Function
+    function signInWithGoogle() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        firebase.auth().signInWithPopup(provider)
+        .then((result) => {
             const user = result.user;
-            btn.textContent = "যাচাই করুন ✓";
-            btn.disabled = false;
-            window.showToast('✅ নম্বর ভেরিফাই সফল হয়েছে!', true);
-            window.goToScreen('passwordScreen'); // এবার পাসওয়ার্ড স্ক্রিনে যাবে
-        }).catch((error) => {
-            btn.textContent = "যাচাই করুন ✓";
-            btn.disabled = false;
-            window.showToast('⚠️ ভুল ওটিপি বা মেয়াদ শেষ। আবার চেষ্টা করুন।');
+            showToast('✅ গুগল লগইন সফল হয়েছে!', true);
+            
+            // গুগল থেকে নাম নিয়ে প্রোফাইলে বসানো
+            if(user.displayName) {
+                document.getElementById('fullName').value = user.displayName;
+            }
+            
+            // গুগল থেকে ছবি নিয়ে প্রোফাইলে বসানো
+            if(user.photoURL) {
+                cropImage.src = user.photoURL;
+                cropImage.style.display = 'block';
+                cropPlaceholder.style.display = 'none';
+                zoomRow.style.display = 'none'; // জুম অপশন গুগলের ছবির জন্য লুকানো
+            }
+
+            // সফল হলে সরাসরি প্রোফাইল স্ক্রিনে চলে যাবে
+            goToScreen('profileScreen');
+        })
+        .catch((error) => {
+            showToast('⚠️ এরর: ' + error.message);
+            console.error(error);
         });
-    };
-
-    // ---- Password ----
-    window.submitPassword = function() {
-        const pw = document.getElementById('password').value;
-        const cpw = document.getElementById('confirmPassword').value;
-        if (!pw || pw.length < 6) return window.showToast('⚠️ পাসওয়ার্ড কমপক্ষে ৬ অক্ষর');
-        if (pw !== cpw) return window.showToast('⚠️ পাসওয়ার্ড মিলছে না!');
-        window.goToScreen('profileScreen');
-    };
-
-    // ---- Profile Pic Cropping System ----
-    let currentScale = 1, translateX = 0, translateY = 0;
-    let isDragging = false, startX, startY, startTranslateX, startTranslateY;
-    const cropImage = document.getElementById('cropImage');
-    const cropPlaceholder = document.getElementById('cropPlaceholder');
-    const zoomSlider = document.getElementById('zoomSlider');
-    const zoomRow = document.getElementById('zoomRow');
-    const cropCircle = document.getElementById('cropCircle');
-
-    window.handleProfilePic = function(event) {
-        const file = event.target.files[0];
-        if (!file || !file.type.startsWith('image/')) return window.showToast('ছবি নির্বাচন করুন');
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            cropImage.src = e.target.result;
-            cropImage.style.display = 'block';
-            cropPlaceholder.style.display = 'none';
-            zoomRow.style.display = 'flex';
-            currentScale = 1; translateX = 0; translateY = 0;
-            updateCropTransform();
-            zoomSlider.value = 1;
-        };
-        reader.readAsDataURL(file);
-    };
-
-    function updateCropTransform() {
-        if (!cropImage.src) return;
-        cropImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
     }
-
-    window.setZoom = function(val) {
-        currentScale = parseFloat(val);
-        updateCropTransform();
-    };
-
-    // Drag events for Crop
-    function dragStart(e) {
-        if (!cropImage.src) return;
-        e.preventDefault();
-        isDragging = true;
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        startX = clientX; startY = clientY;
-        startTranslateX = translateX; startTranslateY = translateY;
-    }
-    function dragMove(e) {
-        if (!isDragging) return;
-        e.preventDefault();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        translateX = startTranslateX + (clientX - startX);
-        translateY = startTranslateY + (clientY - startY);
-        updateCropTransform();
-    }
-    function dragEnd() { isDragging = false; }
-
-    cropCircle.addEventListener('mousedown', dragStart);
-    cropCircle.addEventListener('touchstart', dragStart, {passive: false});
-    window.addEventListener('mousemove', dragMove);
-    window.addEventListener('touchmove', dragMove, {passive: false});
-    window.addEventListener('mouseup', dragEnd);
-    window.addEventListener('touchend', dragEnd);
-
-    document.getElementById('cropContainer').addEventListener('click', function(e) {
-        if (e.target === cropCircle || cropCircle.contains(e.target)) {
-            document.getElementById('profilePicInput').click();
-        }
-    });
-
-    // ---- Gender & Profile Submit ----
+        // ---- state ----
     let selectedGender = null;
-    window.selectGender = function(gender) {
-        selectedGender = gender;
-        document.getElementById('genderMale').classList.remove('selected');
-        document.getElementById('genderFemale').classList.remove('selected');
-        if (gender === 'male') document.getElementById('genderMale').classList.add('selected');
-        else document.getElementById('genderFemale').classList.add('selected');
-    };
+    let currentScale = 1;
+    let translateX = 0, translateY = 0;
+    let isDragging = false, startX, startY, startTranslateX, startTranslateY;
+    let cropImage = document.getElementById('cropImage');
+    let cropPlaceholder = document.getElementById('cropPlaceholder');
+    let zoomSlider = document.getElementById('zoomSlider');
+    let zoomRow = document.getElementById('zoomRow');
 
-    window.submitProfile = function() {
-        const fullName = document.getElementById('fullName').value.trim();
-        const nickname = document.getElementById('nickname').value.trim();
-        if (!fullName || !nickname) return window.showToast('⚠️ নাম ও নিক নেম আবশ্যক');
-        if (!selectedGender) return window.showToast('⚠️ পুরুষ / নারী নির্বাচন করুন');
-        
-        // এখানে ফায়ারবেস ডাটাবেসে ইউজার সেভ করার কোড যোগ করতে পারেন
-        // বর্তমানে লোকালি দেখাচ্ছে
-        const randomPart = Math.random().toString(36).substring(2,10).toUpperCase();
-        const uniqueId = 'MOI-' + randomPart;
-        document.getElementById('uniqueIdDisplay').textContent = uniqueId;
-        document.getElementById('successName').textContent = fullName + ' (' + nickname + ')';
-        window.goToScreen('successScreen');
-    };
-
-    // ---- Reset App ----
-    window.resetAll = function() {
-        document.getElementById('countryCodeInput').value = '880';
-        document.getElementById('phoneNumber').value = '';
-        document.getElementById('otpCode').value = '';
-        document.getElementById('password').value = '';
-        document.getElementById('confirmPassword').value = '';
-        document.getElementById('fullName').value = '';
-        document.getElementById('nickname').value = '';
-        document.getElementById('lastName').value = '';
-        document.getElementById('profilePicInput').value = '';
-        cropImage.src = ''; cropImage.style.display = 'none';
-        cropPlaceholder.style.display = 'block';
-        zoomRow.style.display = 'none';
-        document.getElementById('genderMale').classList.remove('selected');
-        document.getElementById('genderFemale').classList.remove('selected');
-        selectedGender = null;
-        window.goToScreen('phoneScreen');
-        setupRecaptcha();
-    };
-
-    // ---- Particles Effect ----
+    // ---- particles ----
     (function() {
         const container = document.getElementById('particles');
         const colors = ['#6c5ce7','#fd79a8','#f9a825','#00d2ff','#a855f7'];
@@ -538,6 +330,168 @@
             container.appendChild(p);
         }
     })();
+
+    // ---- splash timer ----
+    setTimeout(() => {
+        document.getElementById('splashScreen').classList.remove('active');
+        document.getElementById('phoneScreen').classList.add('active');
+    }, 3000);
+
+    // ---- navigation ----
+    function goToScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }    
+    
+    // ---- phone ----
+    function submitPhone() {
+        const code = document.getElementById('countryCodeInput').value.trim();
+        const number = document.getElementById('phoneNumber').value.trim();
+        if (!code || !number || number.length < 5) return showToast('⚠️ কোড ও ফোন নম্বর দিন');
+        window.userPhone = '+' + code + ' ' + number;
+        goToScreen('passwordScreen');
+    }
+
+    // ---- password ----
+    function submitPassword() {
+        const pw = document.getElementById('password').value;
+        const cpw = document.getElementById('confirmPassword').value;
+        if (!pw || pw.length < 6) return showToast('⚠️ পাসওয়ার্ড কমপক্ষে ৬ অক্ষর');
+        if (pw !== cpw) return showToast('⚠️ পাসওয়ার্ড মিলছে না!');
+        goToScreen('profileScreen');
+    }
+
+    // ---- profile pic cropping ----
+    function handleProfilePic(event) {
+        const file = event.target.files[0];
+        if (!file || !file.type.startsWith('image/')) return showToast('ছবি নির্বাচন করুন');
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            cropImage.src = e.target.result;
+            cropImage.style.display = 'block';
+            cropPlaceholder.style.display = 'none';
+            zoomRow.style.display = 'flex';
+            currentScale = 1;
+            translateX = 0; translateY = 0;
+            updateCropTransform();
+            zoomSlider.value = 1;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function updateCropTransform() {
+        if (!cropImage.src) return;
+        cropImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+    }
+
+    function setZoom(val) {
+        currentScale = parseFloat(val);
+        updateCropTransform();
+    }
+
+    // Pan events
+    const cropCircle = document.getElementById('cropCircle');
+    cropCircle.addEventListener('mousedown', dragStart);
+    cropCircle.addEventListener('touchstart', dragStart, {passive: false});
+    window.addEventListener('mousemove', dragMove);
+    window.addEventListener('touchmove', dragMove, {passive: false});
+    window.addEventListener('mouseup', dragEnd);
+    window.addEventListener('touchend', dragEnd);
+
+    function dragStart(e) {
+        if (!cropImage.src) return;
+        e.preventDefault();
+        isDragging = true;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        startX = clientX; startY = clientY;
+        startTranslateX = translateX; startTranslateY = translateY;
+    }
+
+    function dragMove(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        translateX = startTranslateX + (clientX - startX);
+        translateY = startTranslateY + (clientY - startY);
+        updateCropTransform();
+    }
+
+    function dragEnd() { isDragging = false; }
+
+    // ---- gender ----
+    function selectGender(gender) {
+        selectedGender = gender;
+        document.getElementById('genderMale').classList.remove('selected');
+        document.getElementById('genderFemale').classList.remove('selected');
+        if (gender === 'male') document.getElementById('genderMale').classList.add('selected');
+        else document.getElementById('genderFemale').classList.add('selected');
+    }
+
+    // ---- profile submit ----
+    function submitProfile() {
+        const fullName = document.getElementById('fullName').value.trim();
+        const nickname = document.getElementById('nickname').value.trim();
+        if (!fullName || !nickname) return showToast('⚠️ নাম ও নিক নেম আবশ্যক');
+        if (!selectedGender) return showToast('⚠️ পুরুষ / নারী নির্বাচন করুন');
+        const randomPart = Math.random().toString(36).substring(2,10).toUpperCase();
+        const uniqueId = 'MOI-' + randomPart;
+        document.getElementById('uniqueIdDisplay').textContent = uniqueId;
+        document.getElementById('successName').textContent = fullName + ' (' + nickname + ')';
+        goToScreen('successScreen');
+    }
+
+    // ---- reset ----
+    function resetAll() {
+        document.getElementById('countryCodeInput').value = '880';
+        document.getElementById('phoneNumber').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('confirmPassword').value = '';
+        document.getElementById('fullName').value = '';
+        document.getElementById('nickname').value = '';
+        document.getElementById('lastName').value = '';
+        document.getElementById('profilePicInput').value = '';
+        cropImage.src = ''; cropImage.style.display = 'none';
+        cropPlaceholder.style.display = 'block';
+        zoomRow.style.display = 'none';
+        document.getElementById('genderMale').classList.remove('selected');
+        document.getElementById('genderFemale').classList.remove('selected');
+        selectedGender = null;
+        goToScreen('phoneScreen');
+    }
+
+    // ---- toast ----
+    function showToast(msg, isSuccess = false) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = 'toast' + (isSuccess ? ' toast-success' : '');
+        toast.textContent = msg;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.4s';
+            setTimeout(() => toast.remove(), 400);
+        }, 2500);
+    }
+
+    // ---- enter key ----
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            const active = document.querySelector('.screen.active');
+            if (!active) return;
+            if (active.id === 'phoneScreen') { e.preventDefault(); submitPhone(); }
+            else if (active.id === 'passwordScreen') { e.preventDefault(); submitPassword(); }
+            else if (active.id === 'profileScreen') { e.preventDefault(); submitProfile(); }
+        }
+    });
+
+    // ---- open file dialog when crop container clicked ----
+    document.getElementById('cropContainer').addEventListener('click', function(e) {
+        if (e.target === cropCircle || cropCircle.contains(e.target)) {
+            document.getElementById('profilePicInput').click();
+        }
+    });
 </script>
 </body>
 </html>
