@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MOi · শব্দের সংযোগ</title>
-    <!-- Cropper.js CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
     <style>
         * {
@@ -97,7 +96,6 @@
             width: 40px; height: 40px; border-radius: 50%; color: white; display: flex;
             align-items: center; justify-content: center; margin-right: 15px; font-weight: bold; background: #e91e63;
         }
-        /* প্রোফাইল ও অ্যাপ */
         .profile-pic-section { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
         .profile-circle {
             width: 110px; height: 110px; border-radius: 50%; background: #f0f2f5;
@@ -244,7 +242,7 @@
     const storage = getStorage(app);
     const provider = new GoogleAuthProvider();
 
-    // DOM
+    // DOM এলিমেন্ট
     const pages = {
         login: document.getElementById('login-page'),
         profile: document.getElementById('profile-setup-page'),
@@ -277,7 +275,7 @@
         pages[pageId].classList.add('active');
     }
 
-    // গুগল মোডাল
+    // গুগল মোডাল কন্ট্রোল
     window.showGoogleModal = function() {
         googleModal.style.display = 'flex';
     };
@@ -288,6 +286,7 @@
         closeGoogleModal();
         try {
             await signInWithPopup(auth, provider);
+            // onAuthStateChanged স্বয়ংক্রিয়ভাবে পেজ বদলাবে
         } catch (error) {
             console.error(error);
             alert('লগইন ব্যর্থ: ' + error.message);
@@ -295,7 +294,6 @@
     };
 
     googleLoginBtn.addEventListener('click', showGoogleModal);
-    // (বাইরের অন্ধকার ক্লিকে মোডাল বন্ধ)
     googleModal.addEventListener('click', function(e) {
         if (e.target === googleModal) closeGoogleModal();
     });
@@ -307,7 +305,7 @@
             btn.classList.add('active');
             selectedGender = btn.dataset.gender;
         });
-    });        // ইমেজ ক্রপ
+    });        // ইমেজ ক্রপ সেটআপ
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
