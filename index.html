@@ -439,10 +439,10 @@
         <button class="confirm-btn" id="confirmRegBtn">কনফার্ম</button>
     </div>
 
-    <!-- ৩. গুগল অ্যাকাউন্ট পপআপ (লুকানো) -->
+    <!-- ৩. গুগল পপআপ (লুকানো, এখন ব্যবহার হয় না) -->
     <div id="google-modal" style="display:none;"></div>
 
-    <!-- ৪. ফোন নম্বর লগইন পেজ -->
+    <!-- ৪. ফোন লগইন পেজ -->
     <div id="phone-login-page">
         <div class="header-nav">
             <span class="back-btn" onclick="hidePhonePage()">✕</span>
@@ -568,7 +568,7 @@
         if (gender === 'Male') document.getElementById('male-btn').classList.add('active');
         else document.getElementById('female-btn').classList.add('active');
     }
-</script>    <!-- Firebase SDK -->
+                </script>    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
@@ -594,6 +594,10 @@
         const storage = getStorage(app);
 
         const googleProvider = new GoogleAuthProvider();
+        // ★★★ এই লাইনটিই মূল পরিবর্তন — সব সময় অ্যাকাউন্ট বাছাই করার উইন্ডো দেখাবে ★★★
+        googleProvider.setCustomParameters({
+            prompt: 'select_account'
+        });
 
         document.getElementById('googleSignInBtn').addEventListener('click', async () => {
             try {
@@ -602,7 +606,7 @@
                 window.populateProfileWithGoogle(user);
             } catch (error) {
                 console.error("Google Sign-In Error:", error);
-                alert("সাইন-ইন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
+                alert("সাইন-ইন ব্যর্থ হয়েছে। পপ-আপ ব্লক করা আছে কিনা দেখুন অথবা আবার চেষ্টা করুন।");
             }
         });
 
