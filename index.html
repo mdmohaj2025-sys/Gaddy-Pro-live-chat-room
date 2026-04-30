@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MOi · শব্দের সংযোগ</title>
+    <!-- Cropper.js CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
     <style>
         * {
@@ -12,6 +13,7 @@
             box-sizing: border-box;
             font-family: 'Segoe UI', 'Noto Sans Bengali', Arial, sans-serif;
         }
+
         body {
             background: radial-gradient(circle at 50% 0%, #e0c3fc 0%, #8ec5fc 50%, #b5d1ff 100%);
             min-height: 100vh;
@@ -22,6 +24,7 @@
             overflow-x: hidden;
             position: relative;
         }
+
         .bg-blob {
             position: fixed;
             border-radius: 50%;
@@ -30,380 +33,637 @@
             z-index: 0;
             animation: floatBlob 12s ease-in-out infinite;
         }
-        .bg-blob:nth-child(1) { width: 400px; height: 400px; background: #ff85a2; top: -100px; left: -100px; }
-        .bg-blob:nth-child(2) { width: 350px; height: 350px; background: #9b86f1; bottom: -120px; right: -80px; animation-delay: -5s; }
-        .bg-blob:nth-child(3) { width: 250px; height: 250px; background: #6ec6ff; top: 50%; left: 60%; animation-delay: -8s; }
+        .bg-blob:nth-child(1) {
+            width: 400px;
+            height: 400px;
+            background: #ff85a2;
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+        .bg-blob:nth-child(2) {
+            width: 350px;
+            height: 350px;
+            background: #9b86f1;
+            bottom: -120px;
+            right: -80px;
+            animation-delay: -5s;
+        }
+        .bg-blob:nth-child(3) {
+            width: 250px;
+            height: 250px;
+            background: #6ec6ff;
+            top: 50%;
+            left: 60%;
+            animation-delay: -8s;
+        }
+
         @keyframes floatBlob {
             0%, 100% { transform: translate(0, 0) scale(1); }
             25% { transform: translate(40px, -50px) scale(1.1); }
             50% { transform: translate(-20px, 30px) scale(0.9); }
             75% { transform: translate(-50px, -20px) scale(1.05); }
         }
-        .page {
+
+        #main-login-page {
             width: 100%;
             min-height: 100vh;
-            display: none;
+            display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             padding: 50px 20px 30px;
             position: relative;
             z-index: 10;
         }
-        .page.active { display: flex; }
+
+        .logo-container {
+            text-align: center;
+            margin-top: 40px;
+        }
+
         .logo-text {
-            font-size: 110px; font-weight: 900; color: #fff;
-            text-shadow: 0 0 20px rgba(155,134,241,0.6), 0 0 60px rgba(255,133,162,0.4), 4px 6px 0px rgba(255,133,162,0.7);
-            letter-spacing: -3px; line-height: 1; position: relative; display: inline-block;
+            font-size: 110px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(155, 134, 241, 0.6), 0 0 60px rgba(255, 133, 162, 0.4), 4px 6px 0px rgba(255, 133, 162, 0.7);
+            letter-spacing: -3px;
+            line-height: 1;
+            position: relative;
+            display: inline-block;
         }
         .logo-text::after {
-            content: ''; position: absolute; bottom: 5px; left: 5px; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #9b86f1, #ff85a2); z-index: -1; filter: blur(25px); opacity: 0.7; border-radius: 20px;
+            content: '';
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #9b86f1, #ff85a2);
+            z-index: -1;
+            filter: blur(25px);
+            opacity: 0.7;
+            border-radius: 20px;
         }
-        .slogan { font-size: 18px; margin-top: 5px; opacity: 0.95; font-weight: 300; letter-spacing: 1px; }
+
+        .slogan {
+            font-size: 18px;
+            margin-top: 5px;
+            opacity: 0.95;
+            font-weight: 300;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
         .btn {
-            width: 100%; max-width: 360px; height: 58px; border-radius: 30px;
-            display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600;
-            cursor: pointer; border: none; margin: 10px 0; transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; overflow: hidden;
+            width: 100%;
+            max-width: 360px;
+            height: 58px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            margin-bottom: 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
         }
-        .btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
-        .btn:active { transform: scale(0.97); }
-        .btn-google { background: rgba(255,255,255,0.95); color: #333; border: 2px solid rgba(255,255,255,0.6); backdrop-filter: blur(5px); }
-        .btn-google img { width: 24px; margin-right: 12px; }        .divider {
-            display: flex; align-items: center; width: 100%; max-width: 360px; margin: 20px 0; opacity: 0.9; font-size: 14px;
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
         }
-        .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,0.7); margin: 0 15px; }
-        .social-icons { display: flex; gap: 18px; }
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-google {
+            background-color: #ffffff;
+            color: #333;
+            border: 2px solid rgba(255,255,255,0.6);
+            backdrop-filter: blur(5px);
+            background: rgba(255,255,255,0.95);
+        }
+        .btn-google img {
+            width: 24px;
+            margin-right: 12px;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            max-width: 360px;
+            margin: 20px 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .divider::before, .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,0.7);
+            margin: 0 15px;
+        }        .social-icons {
+            display: flex;
+            gap: 18px;
+        }
         .icon-circle {
-            width: 55px; height: 55px; border-radius: 50%; background: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.4);
-            display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; backdrop-filter: blur(10px);
-            transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.25);
+            border: 1px solid rgba(255,255,255,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
-        .icon-circle:hover { background: rgba(255,255,255,0.45); transform: translateY(-3px); }
-        .footer-text { text-align: center; font-size: 12px; color: rgba(255,255,255,0.85); margin-top: 20px; line-height: 1.8; }
-        /* গুগল মোডাল */
-        #google-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 400;
+        .icon-circle:hover {
+            background: rgba(255,255,255,0.45);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
         }
-        .email-item {
-            display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #f0f0f0;
-            cursor: pointer; border-radius: 8px; transition: 0.2s;
+
+        .footer-text {
+            text-align: center;
+            font-size: 12px;
+            color: rgba(255,255,255,0.85);
+            line-height: 1.8;
+            margin-top: 20px;
         }
-        .email-item:hover { background: #f5f7fa; }
-        .g-avatar {
-            width: 40px; height: 40px; border-radius: 50%; color: white; display: flex;
-            align-items: center; justify-content: center; margin-right: 15px; font-weight: bold; background: #e91e63;
+
+        #profile-setup-page {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: white;
+            display: none;
+            flex-direction: column;
+            padding: 25px;
+            color: #333;
+            z-index: 300;
+            overflow-y: auto;
         }
-        .profile-pic-section { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
+
+        .profile-pic-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
         .profile-circle {
-            width: 110px; height: 110px; border-radius: 50%; background: #f0f2f5;
-            display: flex; align-items: center; justify-content: center; font-size: 40px;
-            border: 2px dashed #ccc; cursor: pointer; position: relative; overflow: hidden; transition: 0.3s;
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: #f0f2f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            border: 2px dashed #ccc;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
         }
-        .profile-circle:hover { border-color: #9b86f1; background: #f5f0ff; }
+        .profile-circle:hover {
+            border-color: #9b86f1;
+            background: #f5f0ff;
+        }
+
         .input-box {
-            background: #f5f7fa; border-radius: 12px; padding: 12px 15px; margin-bottom: 15px; border: 1px solid #eee; width: 100%; max-width: 360px;
+            background: #f5f7fa;
+            border-radius: 12px;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border: 1px solid #eee;
         }
-        .input-box label { font-size: 12px; color: #888; display: block; }
-        .input-box input { border: none; background: transparent; width: 100%; outline: none; font-size: 16px; margin-top: 5px; color: #333; }
-        .gender-container { display: flex; gap: 15px; margin-top: 10px; width: 100%; max-width: 360px; }
+        .input-box label {
+            font-size: 12px;
+            color: #888;
+            display: block;
+        }
+        .input-box input {
+            border: none;
+            background: transparent;
+            width: 100%;
+            outline: none;
+            font-size: 16px;
+            margin-top: 5px;
+            color: #333;
+        }
+
+        .gender-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
         .gender-btn {
-            flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #ddd; text-align: center; cursor: pointer;
-            background: #fff; transition: 0.3s; font-weight: 500;
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+            cursor: pointer;
+            background: #fff;
+            transition: 0.3s;
+            font-weight: 500;
         }
-        .gender-btn.active { background: #9b86f1; color: white; border-color: #9b86f1; box-shadow: 0 4px 12px rgba(155,134,241,0.3); }
+        .gender-btn.active {
+            background: #9b86f1;
+            color: white;
+            border-color: #9b86f1;
+            box-shadow: 0 4px 12px rgba(155,134,241,0.3);
+        }
+
         .confirm-btn {
-            background: linear-gradient(135deg, #9b86f1, #7c5ce7); color: white; width: 100%; max-width: 360px;
-            padding: 16px; border-radius: 30px; border: none; font-weight: bold; font-size: 18px; margin-top: 30px;
-            cursor: pointer; box-shadow: 0 6px 20px rgba(155,134,241,0.3); transition: 0.3s;
+            background: linear-gradient(135deg, #9b86f1, #7c5ce7);
+            color: white;
+            width: 100%;
+            padding: 16px;
+            border-radius: 30px;
+            border: none;
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 30px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(155,134,241,0.3);
+            transition: 0.3s;
         }
-        .confirm-btn:hover { box-shadow: 0 8px 25px rgba(155,134,241,0.5); transform: translateY(-2px); }
-        .app-card {
-            background: white; border-radius: 30px; padding: 30px; width: 100%; max-width: 400px;
-            color: #333; box-shadow: 0 20px 40px rgba(0,0,0,0.1); text-align: center;
+        .confirm-btn:hover {
+            box-shadow: 0 8px 25px rgba(155,134,241,0.5);
+            transform: translateY(-2px);
         }
-        .app-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 20px; border: 3px solid #9b86f1; }
-        .logout-btn { margin-top: 20px; background: #eee; color: #555; padding: 10px 30px; border-radius: 20px; border: none; cursor: pointer; font-weight: 600; }
+
+        #google-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 400;
+        }
+
         #crop-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85);
-            display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 500;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
         }
-        #crop-modal .crop-container { width: 90%; max-width: 400px; height: 400px; position: relative; }
-        #crop-modal img { max-width: 100%; max-height: 100%; }
-        .crop-actions { display: flex; gap: 20px; margin-top: 20px; }
-        .crop-actions button { padding: 12px 30px; border-radius: 25px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .crop-save { background: #9b86f1; color: white; }
-        .crop-cancel { background: #ddd; color: #333; }
-        @media (max-width: 400px) { .logo-text { font-size: 80px; } }
+        #crop-modal .crop-container {
+            width: 90%;
+            max-width: 400px;
+            height: 400px;
+            position: relative;
+        }
+        #crop-modal img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        .crop-actions {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .crop-actions button {
+            padding: 12px 30px;
+            border-radius: 25px;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .crop-save {
+            background: #9b86f1;
+            color: white;
+        }
+        .crop-cancel {
+            background: #ddd;
+            color: #333;
+        }
+
+        @media (max-width: 400px) {
+            .logo-text { font-size: 80px; }
+            .btn { max-width: 300px; height: 50px; font-size: 16px; }
+        }
     </style>
-</head>
-<body>
-    <div class="bg-blob"></div><div class="bg-blob"></div><div class="bg-blob"></div>
-    <!-- লগইন পেজ -->
-    <div id="login-page" class="page active">
-        <div style="text-align: center; margin-top: 40px;">
+</head><body>
+
+    <div class="bg-blob"></div>
+    <div class="bg-blob"></div>
+    <div class="bg-blob"></div>
+
+    <!-- ১. মেইন লগইন পেজ -->
+    <div id="main-login-page">
+        <div class="logo-container">
             <h1 class="logo-text">MOi</h1>
             <p class="slogan">🎵 Sound connects you and me</p>
         </div>
-        <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-            <button id="google-login-btn" class="btn btn-google">
+
+        <div style="width:100%; display:flex; flex-direction:column; align-items:center;">
+            <button class="btn btn-google" id="googleSignInBtn">
                 <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="G">
                 Google দিয়ে চালিয়ে যান
             </button>
+
             <div class="divider">অথবা</div>
+
             <div class="social-icons">
-                <div class="icon-circle">📱</div>
+                <div class="icon-circle" onclick="showPhonePage()">📱</div>
                 <div class="icon-circle">✉️</div>
                 <div class="icon-circle">𝕏</div>
                 <div class="icon-circle">🎵</div>
             </div>
         </div>
+
         <div class="footer-text">
             <p>সমস্যার সম্মুখীন?</p>
             <p>সম্মত হোন ও এগিয়ে যান <u>পরিষেবার শর্তাবলী</u> এবং <u>গোপনীয়তা নীতিমালা</u></p>
         </div>
     </div>
 
-    <!-- গুগল অ্যাকাউন্ট সিলেক্ট মোডাল -->
-    <div id="google-modal">
-        <div style="background: white; width: 88%; max-width: 360px; border-radius: 15px; padding: 20px; color: #333; text-align: center;">
-            <img src="https://www.gstatic.com/images/branding/product/2x/googleg_48dp.png" width="35" style="margin-bottom:10px;">
-            <h3>একটি অ্যাকাউন্ট বাছুন</h3>
-            <div class="email-item" onclick="selectGoogleAccount()">
-                <div class="g-avatar">G</div>
-                <div><b>Google অ্যাকাউন্ট</b><br><small>আপনার Google অ্যাকাউন্ট দিয়ে সাইন ইন করুন</small></div>
+    <!-- ২. প্রোফাইল সেটআপ পেজ -->
+    <div id="profile-setup-page">
+        <div class="header-nav">
+            <span class="back-btn" onclick="hideProfileSetup()">✕</span>
+            <span style="font-weight:bold; font-size:18px;">প্রোফাইল তৈরি করুন</span>
+            <span></span>
+        </div>
+
+        <div class="profile-pic-section">
+            <div class="profile-circle" id="profilePicBtn" onclick="document.getElementById('fileInput').click()">
+                <img id="preview" style="width:100%; height:100%; object-fit:cover; display:none;" crossorigin="anonymous">
+                <span id="pic-icon">📷</span>
             </div>
-            <div style="padding:15px; color:#4285f4; cursor:pointer;" onclick="closeGoogleModal()">+ অন্য একটি অ্যাকাউন্ট যোগ করুন</div>
+            <input type="file" id="fileInput" hidden accept="image/*" onchange="openCropModal(event)">
+            <p style="margin-top:10px; font-size:14px; color:#666;">একটি ছবি আপলোড করুন (ক্রপ করতে পারবেন)</p>
         </div>
-    </div><!-- প্রোফাইল সেটআপ পেজ -->
-<div id="profile-setup-page" class="page">
-    <div style="position: absolute; top: 25px; left: 25px; font-size: 24px; cursor: pointer;" onclick="window.location.reload()">✕</div>
-    <h2 style="margin-bottom: 25px; color: #333;">প্রোফাইল তৈরি করুন</h2>
-    <div class="profile-pic-section">
-        <div class="profile-circle" onclick="document.getElementById('fileInput').click()">
-            <span id="pic-icon">📷</span>
-            <img id="preview" style="width:100%; height:100%; object-fit:cover; display:none;">
+
+        <div class="input-box">
+            <label>নতুন ডাকনাম (Nickname)</label>
+            <input type="text" id="nickname" placeholder="যেমন: Mohaj123">
         </div>
-        <input type="file" id="fileInput" hidden accept="image/*">
-        <p style="margin-top: 10px; font-size: 14px; color: #666;">ক্রপ করতে ছবি আপলোড করুন</p>
+        <div class="input-box">
+            <label>শেষ নাম (Last Name)</label>
+            <input type="text" id="lastname" placeholder="আপনার শেষ নাম লিখুন">
+        </div>
+        <div class="input-box">
+            <label>ইমেইল (Email)</label>
+            <input type="email" id="reg-email" placeholder="example@gmail.com" readonly style="color:#888;">
+        </div>
+
+        <p style="font-size:14px; color:#888; margin-bottom:10px;">লিঙ্গ নির্বাচন করুন</p>
+        <div class="gender-container">
+            <div class="gender-btn" id="male-btn" onclick="selectGender('Male')">👨 পুরুষ</div>
+            <div class="gender-btn" id="female-btn" onclick="selectGender('Female')">👩 মহিলা</div>
+        </div>
+
+        <button class="confirm-btn" id="confirmRegBtn">কনফার্ম</button>
     </div>
-    <div class="input-box"><label>নতুন ডাকনাম (Nickname)</label><input type="text" id="nickname" placeholder="যেমন: Mohaj123"></div>
-    <div class="input-box"><label>শেষ নাম (Last Name)</label><input type="text" id="lastname" placeholder="আপনার শেষ নাম"></div>
-    <div class="input-box"><label>ইমেইল (Email)</label><input type="email" id="reg-email" disabled></div>
-    <p style="color: #888; margin: 10px 0 5px;">লিঙ্গ নির্বাচন করুন</p>
-    <div class="gender-container">
-        <div class="gender-btn" data-gender="Male">👨 পুরুষ</div>
-        <div class="gender-btn" data-gender="Female">👩 মহিলা</div>
+
+    <!-- ৩. গুগল অ্যাকাউন্ট পপআপ (লুকানো) -->
+    <div id="google-modal" style="display:none;"></div>
+
+    <!-- ৪. ফোন নম্বর লগইন পেজ -->
+    <div id="phone-login-page">
+        <div class="header-nav">
+            <span class="back-btn" onclick="hidePhonePage()">✕</span>
+            <span style="font-weight:bold;">লগইন</span>
+            <span style="color:#4285f4; font-weight:bold;" onclick="showProfileSetup()">নিবন্ধন</span>
+        </div>
+        <h2 style="margin-bottom:35px;">আপনার ফোন নম্বর লিখুন</h2>
+        <div style="background:#f5f7fa; border-radius:12px; padding:15px; display:flex; align-items:center; margin-bottom:15px;">
+            <span>🇧🇩 +880</span>
+            <span style="margin:0 10px; color:#ddd;">|</span>
+            <input type="tel" placeholder="ফোন নম্বর" style="border:none; background:transparent; font-size:16px;">
+        </div>
+        <button class="confirm-btn" style="background:#e0e0e0; color:#999;">পরবর্তী</button>
     </div>
-    <button id="save-profile-btn" class="confirm-btn">কনফার্ম</button>
-</div>
 
-<!-- মূল অ্যাপ পেজ -->
-<div id="main-app-page" class="page">
-    <div class="app-card">
-        <img id="app-avatar" class="app-avatar" src="" alt="avatar">
-        <h2 id="app-nickname"></h2>
-        <p id="app-email" style="color: #888;"></p>
-        <p style="margin-top: 20px;">আপনার ইউজার আইডি: <strong id="app-userid"></strong></p>
-        <p>কয়েন: 🪙 <span id="app-coin"></span></p>
-        <button id="logout-btn" class="logout-btn">লগআউট</button>
-    </div>
-</div>
+    <!-- ৫. ইমেজ ক্রপ মোডাল -->
+    <div id="crop-modal">
+        <div class="crop-container">
+            <img id="crop-image" alt="crop preview">
+        </div>
+        <div class="crop-actions">
+            <button class="crop-cancel" onclick="cancelCrop()">বাতিল</button>
+            <button class="crop-save" onclick="applyCrop()">✅ ক্রপ করে সেভ করুন</button>
+        </div>
+    </div><!-- Cropper.js JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-<!-- ক্রপ মোডাল -->
-<div id="crop-modal">
-    <div class="crop-container"><img id="crop-image"></div>
-    <div class="crop-actions">
-        <button class="crop-cancel" id="crop-cancel-btn">বাতিল</button>
-        <button class="crop-save" id="crop-save-btn">✅ ক্রপ করে সেভ করুন</button>
-    </div>
-</div><script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
-    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
-    import Cropper from "https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyDXwE6T6fOBBIbxWIMBPJoHN4PD9NXazKw",
-        authDomain: "moi-project-25509.firebaseapp.com",
-        databaseURL: "https://moi-project-25509-default-rtdb.firebaseio.com",
-        projectId: "moi-project-25509",
-        storageBucket: "moi-project-25509.firebasestorage.app",
-        messagingSenderId: "465225004410",
-        appId: "1:465225004410:web:e266146adb1ccaca4992c3"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-    const storage = getStorage(app);
-    const provider = new GoogleAuthProvider();
-
-    // DOM এলিমেন্ট
-    const pages = {
-        login: document.getElementById('login-page'),
-        profile: document.getElementById('profile-setup-page'),
-        main: document.getElementById('main-app-page')
-    };
-    const googleLoginBtn = document.getElementById('google-login-btn');
-    const googleModal = document.getElementById('google-modal');
-    const saveProfileBtn = document.getElementById('save-profile-btn');
-    const logoutBtn = document.getElementById('logout-btn');
-    const fileInput = document.getElementById('fileInput');
-    const previewImg = document.getElementById('preview');
-    const picIcon = document.getElementById('pic-icon');
-    const regEmail = document.getElementById('reg-email');
-    const nicknameInput = document.getElementById('nickname');
-    const lastnameInput = document.getElementById('lastname');
-    const genderBtns = document.querySelectorAll('.gender-btn');
-    const appAvatar = document.getElementById('app-avatar');
-    const appNickname = document.getElementById('app-nickname');
-    const appEmail = document.getElementById('app-email');
-    const appUserId = document.getElementById('app-userid');
-    const appCoin = document.getElementById('app-coin');
-
+<script>
+    let selectedGender = "";
     let cropper = null;
-    let selectedGender = '';
-    let croppedBlob = null;
+    let currentFile = null;
+    let croppedImageBlob = null;
+    let googleUser = null;
 
-    // পেজ সুইচ
-    function showPage(pageId) {
-        Object.keys(pages).forEach(key => pages[key].classList.remove('active'));
-        pages[pageId].classList.add('active');
+    function showProfileSetup() {
+        document.getElementById('profile-setup-page').style.display = 'flex';
+    }
+    function hideProfileSetup() {
+        document.getElementById('profile-setup-page').style.display = 'none';
+    }
+    function showPhonePage() {
+        document.getElementById('phone-login-page').style.display = 'flex';
+    }
+    function hidePhonePage() {
+        document.getElementById('phone-login-page').style.display = 'none';
     }
 
-    // গুগল মোডাল কন্ট্রোল
-    window.showGoogleModal = function() {
-        googleModal.style.display = 'flex';
-    };
-    window.closeGoogleModal = function() {
-        googleModal.style.display = 'none';
-    };
-    window.selectGoogleAccount = async function() {
-        closeGoogleModal();
-        try {
-            await signInWithPopup(auth, provider);
-            // onAuthStateChanged স্বয়ংক্রিয়ভাবে পেজ বদলাবে
-        } catch (error) {
-            console.error(error);
-            alert('লগইন ব্যর্থ: ' + error.message);
+    function populateProfileWithGoogle(user) {
+        googleUser = user;
+        document.getElementById('nickname').value = user.displayName || "";
+        document.getElementById('reg-email').value = user.email || "";
+        
+        const previewImg = document.getElementById('preview');
+        const picIcon = document.getElementById('pic-icon');
+        if (user.photoURL) {
+            previewImg.src = user.photoURL;
+            previewImg.style.display = 'block';
+            picIcon.style.display = 'none';
+        } else {
+            previewImg.style.display = 'none';
+            picIcon.style.display = 'block';
         }
-    };
+        croppedImageBlob = null;
+        showProfileSetup();
+    }
 
-    googleLoginBtn.addEventListener('click', showGoogleModal);
-    googleModal.addEventListener('click', function(e) {
-        if (e.target === googleModal) closeGoogleModal();
-    });
+    function openCropModal(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        currentFile = file;
 
-    // লিঙ্গ সিলেক্ট
-    genderBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            genderBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            selectedGender = btn.dataset.gender;
-        });
-    });        // ইমেজ ক্রপ সেটআপ
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                document.getElementById('crop-image').src = ev.target.result;
-                document.getElementById('crop-modal').style.display = 'flex';
-                if (cropper) cropper.destroy();
-                cropper = new Cropper(document.getElementById('crop-image'), {
-                    aspectRatio: 1,
-                    viewMode: 2,
-                    autoCropArea: 0.8,
-                    responsive: true,
-                    background: false
-                });
-            };
-            reader.readAsDataURL(file);
-            fileInput.value = '';
-        });
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const cropImage = document.getElementById('crop-image');
+            cropImage.src = e.target.result;
+            document.getElementById('crop-modal').style.display = 'flex';
 
-        document.getElementById('crop-save-btn').addEventListener('click', () => {
-            if (!cropper) return;
-            const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
-            canvas.toBlob(blob => {
-                previewImg.src = URL.createObjectURL(blob);
-                previewImg.style.display = 'block';
-                picIcon.style.display = 'none';
-                croppedBlob = blob;
-                document.getElementById('crop-modal').style.display = 'none';
+            if (cropper) cropper.destroy();
+            cropper = new Cropper(cropImage, {
+                aspectRatio: 1,
+                viewMode: 2,
+                autoCropArea: 0.8,
+                responsive: true,
+                background: false,
+            });
+        };
+        reader.readAsDataURL(file);
+        event.target.value = '';
+    }
+
+    function applyCrop() {
+        if (!cropper) return;
+        const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
+        canvas.toBlob(function(blob) {
+            croppedImageBlob = blob;
+            const url = URL.createObjectURL(blob);
+            const previewImg = document.getElementById('preview');
+            previewImg.src = url;
+            previewImg.style.display = 'block';
+            document.getElementById('pic-icon').style.display = 'none';
+
+            document.getElementById('crop-modal').style.display = 'none';
+            if (cropper) {
                 cropper.destroy();
                 cropper = null;
-            }, 'image/jpeg', 0.9);
-        });
+            }
+        }, 'image/jpeg', 0.9);
+    }
 
-        document.getElementById('crop-cancel-btn').addEventListener('click', () => {
-            document.getElementById('crop-modal').style.display = 'none';
-            if (cropper) { cropper.destroy(); cropper = null; }
-        });
+    function cancelCrop() {
+        document.getElementById('crop-modal').style.display = 'none';
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+        currentFile = null;
+    }
 
-        // প্রোফাইল সেভ
-        saveProfileBtn.addEventListener('click', async () => {
-            const user = auth.currentUser;
-            if (!user) return alert('লগইন করা নেই');
-            const nickname = nicknameInput.value.trim();
-            const lastname = lastnameInput.value.trim();
-            if (!nickname || !selectedGender) return alert('ডাকনাম ও লিঙ্গ আবশ্যক');
+    function selectGender(gender) {
+        selectedGender = gender;
+        document.getElementById('male-btn').classList.remove('active');
+        document.getElementById('female-btn').classList.remove('active');
+        if (gender === 'Male') document.getElementById('male-btn').classList.add('active');
+        else document.getElementById('female-btn').classList.add('active');
+    }
+</script>    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+        import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+        import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDXwE6T6fOBBIbxWIMBPJoHN4PD9NXazKw",
+            authDomain: "moi-project-25509.firebaseapp.com",
+            databaseURL: "https://moi-project-25509-default-rtdb.firebaseio.com",
+            projectId: "moi-project-25509",
+            storageBucket: "moi-project-25509.firebasestorage.app",
+            messagingSenderId: "465225004410",
+            appId: "1:465225004410:web:e266146adb1ccaca4992c3",
+            measurementId: "G-NMR8T9SF67"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        const storage = getStorage(app);
+
+        const googleProvider = new GoogleAuthProvider();
+
+        document.getElementById('googleSignInBtn').addEventListener('click', async () => {
             try {
-                let profilePicUrl = '';
-                if (croppedBlob) {
-                    const imageRef = storageRef(storage, `profile_pics/${user.uid}.jpg`);
-                    await uploadBytes(imageRef, croppedBlob);
-                    profilePicUrl = await getDownloadURL(imageRef);
-                } else {
-                    profilePicUrl = user.photoURL || '';
+                const result = await signInWithPopup(auth, googleProvider);
+                const user = result.user;
+                window.populateProfileWithGoogle(user);
+            } catch (error) {
+                console.error("Google Sign-In Error:", error);
+                alert("সাইন-ইন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
+            }
+        });
+
+        document.getElementById('confirmRegBtn').addEventListener('click', async () => {
+            const nick = document.getElementById('nickname').value.trim();
+            const lastname = document.getElementById('lastname').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const gender = window.selectedGender;
+
+            if (!nick || !gender || !email) {
+                alert("দয়া করে নাম, ইমেইল এবং লিঙ্গ পূরণ করুন!");
+                return;
+            }
+            if (!window.googleUser) {
+                alert("আগে গুগল দিয়ে সাইন-ইন করুন!");
+                return;
+            }
+
+            document.getElementById('confirmRegBtn').disabled = true;
+            document.getElementById('confirmRegBtn').innerText = "প্রক্রিয়া চলছে...";
+
+            try {
+                const usersRef = ref(db, 'users');
+                const newUserRef = push(usersRef);
+                const uniqueUserId = newUserRef.key;
+
+                let photoURL = window.googleUser.photoURL || "";
+
+                if (window.croppedImageBlob) {
+                    const photoPath = `profile_pics/${uniqueUserId}.jpg`;
+                    const photoRef = sRef(storage, photoPath);
+                    await uploadBytes(photoRef, window.croppedImageBlob);
+                    photoURL = await getDownloadURL(photoRef);
                 }
-                await set(ref(db, 'users/' + user.uid), {
-                    userID: user.uid,
-                    nickname,
-                    lastname,
-                    email: user.email,
-                    gender: selectedGender,
-                    profilePic: profilePicUrl,
-                    coin: 50000,
+
+                const profileData = {
+                    userId: uniqueUserId,
+                    firebaseUid: window.googleUser.uid,
+                    nickname: nick,
+                    lastname: lastname,
+                    email: email,
+                    gender: gender,
+                    photoURL: photoURL,
                     createdAt: new Date().toISOString()
-                });
-                alert('প্রোফাইল তৈরি সম্পন্ন! 🎉');
+                };
+
+                await set(newUserRef, profileData);
+
+                alert(`🎉 প্রোফাইল তৈরি হয়েছে! আপনার ইউজার আইডি: ${uniqueUserId}`);
                 window.location.reload();
-            } catch (err) {
-                console.error(err);
-                alert('সমস্যা: ' + err.message);
+            } catch (error) {
+                console.error("Profile save error:", error);
+                alert("কিছু সমস্যা হয়েছে, আবার চেষ্টা করুন।");
+            } finally {
+                document.getElementById('confirmRegBtn').disabled = false;
+                document.getElementById('confirmRegBtn').innerText = "কনফার্ম";
             }
         });
 
-        // লগআউট
-        logoutBtn.addEventListener('click', async () => {
-            await signOut(auth);
-        });
-
-        // অথেনটিকেশন স্টেট
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                const snap = await get(ref(db, 'users/' + user.uid));
-                if (snap.exists()) {
-                    const data = snap.val();
-                    appAvatar.src = data.profilePic || user.photoURL || '';
-                    appNickname.textContent = data.nickname;
-                    appEmail.textContent = user.email;
-                    appUserId.textContent = data.userID;
-                    appCoin.textContent = data.coin || 0;
-                    showPage('main');
-                } else {
-                    regEmail.value = user.email;
-                    showPage('profile');
-                }
-            } else {
-                showPage('login');
-            }
-        });
+        window.populateProfileWithGoogle = window.populateProfileWithGoogle || populateProfileWithGoogle;
     </script>
+
 </body>
 </html>
