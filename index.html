@@ -400,7 +400,7 @@
         </div>
     </div>
 
-    <!-- ২. প্রোফাইল সেটআপ পেজ -->
+    <!-- ২. প্রোফাইল সেটআপ পেজ (ইমেইল সেকশন নেই) -->
     <div id="profile-setup-page">
         <div class="header-nav">
             <span class="back-btn" onclick="hideProfileSetup()">✕</span>
@@ -418,19 +418,15 @@
         </div>
 
         <div class="input-box">
-            <label>নতুন ডাকনাম (Nickname)</label>
+            <label>নতুন ডাকনাম (Nickname) — অপশনাল</label>
             <input type="text" id="nickname" placeholder="যেমন: Mohaj123">
         </div>
         <div class="input-box">
-            <label>শেষ নাম (Last Name)</label>
+            <label>শেষ নাম (Last Name) — অপশনাল</label>
             <input type="text" id="lastname" placeholder="আপনার শেষ নাম লিখুন">
         </div>
-        <div class="input-box">
-            <label>ইমেইল (Email)</label>
-            <input type="email" id="reg-email" placeholder="example@gmail.com" readonly style="color:#888;">
-        </div>
 
-        <p style="font-size:14px; color:#888; margin-bottom:10px;">লিঙ্গ নির্বাচন করুন</p>
+        <p style="font-size:14px; color:#888; margin-bottom:10px;">লিঙ্গ নির্বাচন করুন (অপশনাল)</p>
         <div class="gender-container">
             <div class="gender-btn" id="male-btn" onclick="selectGender('Male')">👨 পুরুষ</div>
             <div class="gender-btn" id="female-btn" onclick="selectGender('Female')">👩 মহিলা</div>
@@ -439,7 +435,7 @@
         <button class="confirm-btn" id="confirmRegBtn">কনফার্ম</button>
     </div>
 
-    <!-- ৩. গুগল পপআপ (লুকানো, এখন ব্যবহার হয় না) -->
+    <!-- ৩. গুগল পপআপ (লুকানো) -->
     <div id="google-modal" style="display:none;"></div>
 
     <!-- ৪. ফোন লগইন পেজ -->
@@ -471,11 +467,17 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
 <script>
+    // গ্লোবাল ভ্যারিয়েবল
     let selectedGender = "";
     let cropper = null;
     let currentFile = null;
     let croppedImageBlob = null;
     let googleUser = null;
+    let existingProfile = null; // আগের প্রোফাইল থাকলে সেটা ধরে রাখবে
+
+    window.selectedGender = selectedGender;
+    window.croppedImageBlob = croppedImageBlob;
+    window.googleUser = googleUser;
 
     function showProfileSetup() {
         document.getElementById('profile-setup-page').style.display = 'flex';
@@ -490,23 +492,74 @@
         document.getElementById('phone-login-page').style.display = 'none';
     }
 
-    function populateProfileWithGoogle(user) {
+    function populateProfileWithGoogle(user, existingData) {
         googleUser = user;
-        document.getElementById('nickname').value = user.displayName || "";
-        document.getElementById('reg-email').value = user.email || "";
+        window.googleUser = user;
         
-        const previewImg = document.getElementById('preview');
-        const picIcon = document.getElementById('pic-icon');
-        if (user.photoURL) {
-            previewImg.src = user.photoURL;
-            previewImg.style.display = 'block';
-            picIcon.style.display = 'none';
+        // আগের প্রোফাইল থাকলে সেটা দেখান, না থাকলে গুগল থেকে নেওয়া নাম দেখান
+        if (existingData) {
+            existingProfile = existingData;
+            document.getElementById('nickname').value = existingData.nickname || user.displayName || "";
+            document.getElementById('lastname').value = existingData.lastname || "";
+            if (existingData.gender === 'Male') {
+                selectGender('Male');
+            } else if (existingData.gender === 'Female') {
+                selectGender('Female');
+            } else {
+                // কোনো লিঙ্গ সেট না করা থাকলে active ক্লাস রিমুভ
+                document.getElementById('male-btn').classList.remove('active');
+                document.getElementById('female-btn').classList.remove('active');
+                selectedGender = "";
+                window.selectedGender = "";
+            }
+            
+            const previewImg = document.getElementById('preview');
+            const picIcon = document.getElementById('pic-icon');
+            if (existingData.photoURL) {
+                previewImg.src = existingData.photoURL;
+                previewImg.style.display = 'block';
+                picIcon.style.display = 'none';
+            } else if (user.photoURL) {
+                previewImg.src = user.photoURL;
+                previewImg.style.display = 'block';
+                picIcon.style.display = 'none';
+            } else {
+                previewImg.style.display = 'none';
+                picIcon.style.display = 'block';
+            }
         } else {
-            previewImg.style.display = 'none';
-            picIcon.style.display = 'block';
+            // নতুন ইউজার
+            existingProfile = null;
+            document.getElementById('nickname').value = user.displayName || "";
+            document.getElementById('lastname').value = "";
+            document.getElementById('male-btn').classList.remove('active');
+            document.getElementById('female-btn').classList.remove('active');
+            selectedGender = "";
+            window.selectedGender = "";
+            
+            const previewImg = document.getElementById('preview');
+            const picIcon = document.getElementById('pic-icon');
+            if (user.photoURL) {
+                previewImg.src = user.photoURL;
+                previewImg.style.display = 'block';
+                picIcon.style.display = 'none';
+            } else {
+                previewImg.style.display = 'none';
+                picIcon.style.display = 'block';
+            }
         }
         croppedImageBlob = null;
+        window.croppedImageBlob = null;
         showProfileSetup();
+    }
+
+    function selectGender(gender) {
+        selectedGender = gender;
+        window.selectedGender = gender;
+        document.getElementById('male-btn').classList.remove('active');
+        document.getElementById('female-btn').classList.remove('active');
+        if (gender === 'Male') document.getElementById('male-btn').classList.add('active');
+        else if (gender === 'Female') document.getElementById('female-btn').classList.add('active');
     }
 
     function openCropModal(event) {
@@ -538,6 +591,7 @@
         const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
         canvas.toBlob(function(blob) {
             croppedImageBlob = blob;
+            window.croppedImageBlob = blob;
             const url = URL.createObjectURL(blob);
             const previewImg = document.getElementById('preview');
             previewImg.src = url;
@@ -561,19 +615,22 @@
         currentFile = null;
     }
 
-    function selectGender(gender) {
-        selectedGender = gender;
-        document.getElementById('male-btn').classList.remove('active');
-        document.getElementById('female-btn').classList.remove('active');
-        if (gender === 'Male') document.getElementById('male-btn').classList.add('active');
-        else document.getElementById('female-btn').classList.add('active');
-    }
-                </script>    <!-- Firebase SDK -->
+    // গ্লোবাল ফাংশন এক্সপোজ
+    window.selectGender = selectGender;
+    window.populateProfileWithGoogle = populateProfileWithGoogle;
+    window.showProfileSetup = showProfileSetup;
+    window.hideProfileSetup = hideProfileSetup;
+    window.showPhonePage = showPhonePage;
+    window.hidePhonePage = hidePhonePage;
+    window.openCropModal = openCropModal;
+    window.applyCrop = applyCrop;
+    window.cancelCrop = cancelCrop;
+</script>    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-        import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+        import { getDatabase, ref, get, set, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
         import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
 
         const firebaseConfig = {
@@ -594,33 +651,68 @@
         const storage = getStorage(app);
 
         const googleProvider = new GoogleAuthProvider();
-        // ★★★ এই লাইনটিই মূল পরিবর্তন — সব সময় অ্যাকাউন্ট বাছাই করার উইন্ডো দেখাবে ★★★
         googleProvider.setCustomParameters({
             prompt: 'select_account'
         });
 
+        // ১০ ডিজিটের ইউনিক আইডি জেনারেটর
+        function generateTenDigitId() {
+            let result = '';
+            for (let i = 0; i < 10; i++) {
+                result += Math.floor(Math.random() * 10).toString();
+            }
+            return result;
+        }
+
+        // ইউনিক আইডি চেক করে (ডাটাবেসে আগে থেকে না থাকলে দেবে)
+        async function getUniqueUserId() {
+            const usersRef = ref(db, 'users');
+            let isUnique = false;
+            let candidateId = '';
+            while (!isUnique) {
+                candidateId = generateTenDigitId();
+                // ফায়ারবেসে এই id দিয়ে চেক করব
+                const snapshot = await get(query(usersRef, orderByChild('userId'), equalTo(candidateId)));
+                if (!snapshot.exists()) {
+                    isUnique = true;
+                }
+            }
+            return candidateId;
+        }
+
+        // গুগল সাইন-ইন বাটন
         document.getElementById('googleSignInBtn').addEventListener('click', async () => {
             try {
                 const result = await signInWithPopup(auth, googleProvider);
                 const user = result.user;
-                window.populateProfileWithGoogle(user);
+
+                // চেক করব আগে থেকেই প্রোফাইল আছে কিনা
+                const usersRef = ref(db, 'users');
+                const q = query(usersRef, orderByChild('firebaseUid'), equalTo(user.uid));
+                const snapshot = await get(q);
+
+                if (snapshot.exists()) {
+                    // আগের প্রোফাইল আছে
+                    const existingData = Object.values(snapshot.val())[0];
+                    window.populateProfileWithGoogle(user, existingData);
+                } else {
+                    // নতুন ইউজার
+                    window.populateProfileWithGoogle(user, null);
+                }
             } catch (error) {
                 console.error("Google Sign-In Error:", error);
                 alert("সাইন-ইন ব্যর্থ হয়েছে। পপ-আপ ব্লক করা আছে কিনা দেখুন অথবা আবার চেষ্টা করুন।");
             }
         });
 
+        // কনফার্ম বাটন
         document.getElementById('confirmRegBtn').addEventListener('click', async () => {
             const nick = document.getElementById('nickname').value.trim();
             const lastname = document.getElementById('lastname').value.trim();
-            const email = document.getElementById('reg-email').value.trim();
-            const gender = window.selectedGender;
+            const gender = window.selectedGender || "";
+            const user = window.googleUser;
 
-            if (!nick || !gender || !email) {
-                alert("দয়া করে নাম, ইমেইল এবং লিঙ্গ পূরণ করুন!");
-                return;
-            }
-            if (!window.googleUser) {
+            if (!user) {
                 alert("আগে গুগল দিয়ে সাইন-ইন করুন!");
                 return;
             }
@@ -629,33 +721,57 @@
             document.getElementById('confirmRegBtn').innerText = "প্রক্রিয়া চলছে...";
 
             try {
-                const usersRef = ref(db, 'users');
-                const newUserRef = push(usersRef);
-                const uniqueUserId = newUserRef.key;
+                // যদি existingProfile থেকে থাকে, মানে আগের ডাটাবেস এন্ট্রি আছে
+                let uniqueUserId;
+                let userRefPath;
 
-                let photoURL = window.googleUser.photoURL || "";
+                if (window.existingProfile) {
+                    uniqueUserId = window.existingProfile.userId;
+                    // আগের রেফারেন্স খুঁজে বের করা
+                    const usersRef = ref(db, 'users');
+                    const q = query(usersRef, orderByChild('firebaseUid'), equalTo(user.uid));
+                    const snapshot = await get(q);
+                    if (snapshot.exists()) {
+                        const key = Object.keys(snapshot.val())[0];
+                        userRefPath = ref(db, 'users/' + key);
+                    } else {
+                        // যদি না পাওয়া যায় (হতে পারে), নতুন করে তৈরি
+                        uniqueUserId = await getUniqueUserId();
+                        userRefPath = ref(db, 'users/' + user.uid);
+                    }
+                } else {
+                    // নতুন ইউজার
+                    uniqueUserId = await getUniqueUserId();
+                    userRefPath = ref(db, 'users/' + user.uid); // আমরা push না করে uid দিচ্ছি, পরে userId ফিল্ডে রাখছি ১০ ডিজিট
+                    // কিন্তু অনেক ইউজারের জন্য uid-ই ইউনিক, তাই path হিসেবে ব্যবহার করতে পারি
+                }
 
+                let photoURL = user.photoURL || ""; // ডিফল্ট গুগল ছবি
                 if (window.croppedImageBlob) {
                     const photoPath = `profile_pics/${uniqueUserId}.jpg`;
-                    const photoRef = sRef(storage, photoPath);
-                    await uploadBytes(photoRef, window.croppedImageBlob);
-                    photoURL = await getDownloadURL(photoRef);
+                    const photoRefStorage = sRef(storage, photoPath);
+                    await uploadBytes(photoRefStorage, window.croppedImageBlob);
+                    photoURL = await getDownloadURL(photoRefStorage);
+                } else if (window.existingProfile && window.existingProfile.photoURL) {
+                    photoURL = window.existingProfile.photoURL;
                 }
 
                 const profileData = {
                     userId: uniqueUserId,
-                    firebaseUid: window.googleUser.uid,
+                    firebaseUid: user.uid,
                     nickname: nick,
                     lastname: lastname,
-                    email: email,
+                    email: user.email || "",
                     gender: gender,
                     photoURL: photoURL,
-                    createdAt: new Date().toISOString()
+                    updatedAt: new Date().toISOString(),
+                    createdAt: window.existingProfile ? window.existingProfile.createdAt : new Date().toISOString()
                 };
 
-                await set(newUserRef, profileData);
+                await set(userRefPath, profileData);
 
-                alert(`🎉 প্রোফাইল তৈরি হয়েছে! আপনার ইউজার আইডি: ${uniqueUserId}`);
+                alert(`🎉 প্রোফাইল সংরক্ষিত হয়েছে!\n\nইউজার আইডি: ${uniqueUserId}\nনাম: ${nick || 'দেওয়া হয়নি'}\nশেষ নাম: ${lastname || 'দেওয়া হয়নি'}\nইমেইল: ${user.email || 'N/A'}\n\nএখন আপনি লগইন অবস্থায় আছেন।`);
+                // রিলোড না করে লগইন পেজে ফেরত যেতে পারেন, অথবা আপনি যেমন চান
                 window.location.reload();
             } catch (error) {
                 console.error("Profile save error:", error);
@@ -666,7 +782,9 @@
             }
         });
 
-        window.populateProfileWithGoogle = window.populateProfileWithGoogle || populateProfileWithGoogle;
+        // গ্লোবাল এক্সপোজ
+        window.existingProfile = null;
+        window.getUniqueUserId = getUniqueUserId;
     </script>
 
 </body>
