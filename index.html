@@ -3,200 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Voice Room - Gift & Audio Realtime</title>
+    <title>Voice Club - 20 Seats</title>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- Agora RTC -->
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.11.0.js"></script>
+    <!-- Agora RTM -->
+    <script src="https://download.agora.io/rtm/sdk/release/agora-rtm-sdk-1.5.1.js"></script>
+    <!-- Croppie -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background-color: #111; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        body { background: #0f0f1a; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         .app-container {
-            width: 100%; max-width: 400px; height: 100vh; background: #fff;
-            display: flex; flex-direction: column; overflow-y: auto; position: relative;
+            width: 400px; max-width: 100vw; height: 100vh; background: #1a1a2e;
+            display: flex; flex-direction: column; position: relative; overflow: hidden;
+            box-shadow: 0 0 40px rgba(0,0,0,0.6); color: #eee;
         }
-        .top-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; flex-shrink: 0; }
+        .top-header {
+            padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;
+            background: #16213e; border-bottom: 1px solid #222;
+        }
         .profile-group { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        .group-avatar { width: 40px; height: 40px; border-radius: 50%; background: #eee; object-fit: cover; }
-        .status-container { padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-        .status-msg { font-size: 16px; font-weight: bold; }
-        #topic-editor { display: none; position: absolute; top: 110px; left: 10px; right: 10px; padding: 15px; background: white; z-index: 4000; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 8px; }
-        .seats-grid {
-            display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; padding: 10px;
-            flex-shrink: 0;
-        }
-        .seat-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
-        .circle { width: 55px; height: 55px; border-radius: 50%; background: #f2f2f2; display: flex; align-items: center; justify-content: center; border: 1px solid #e0e0e0; overflow: hidden; position: relative; }
+        .group-avatar { width: 40px; height: 40px; border-radius: 50%; background: #e94560; object-fit: cover; }
+        .header-icons span { margin-left: 15px; cursor: pointer; font-size: 18px; }
+        .status-bar { padding: 10px 16px; font-weight: 600; font-size: 15px; background: #1a1a40; display: flex; justify-content: space-between; align-items: center; }
+        #topic-editor { display: none; position: absolute; top: 100px; left: 10px; right: 10px; padding: 15px; background: white; z-index: 4000; border-radius: 8px; color: black; }
+        .main-content { flex: 1; overflow-y: auto; padding: 10px 10px 70px; }
+        .seats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 10px; }
+        .seat-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; }
+        .circle { width: 46px; height: 46px; border-radius: 50%; background: #2a2a4a; display: flex; align-items: center; justify-content: center; border: 1px solid #444; overflow: hidden; position: relative; font-size: 18px; }
         .user-img { width: 100%; height: 100%; object-fit: cover; }
-        .label { font-size: 10px; margin-top: 4px; font-weight: bold; color: #555; width: 55px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .lock-overlay { display: none; position: absolute; top: 16px; font-size: 16px; z-index: 10; }
-        .mute-badge {
-            display: none; position: absolute; bottom: 1px; right: 1px;
-            background: red; color: white; border-radius: 50%; width: 18px; height: 18px;
-            font-size: 12px; text-align: center; line-height: 18px; z-index: 20;
-        }
-        .listener-section { padding: 15px; flex-shrink: 0; margin-top: auto; }
-        #bottom-profile { display: flex; flex-direction: column; align-items: center; width: fit-content; visibility: visible; }
-        .avatar-l { width: 55px; height: 55px; border-radius: 50%; background: #ddd; background-size: cover; position: relative; }
-        .footer-nav { display: flex; justify-content: space-between; padding: 10px 20px; flex-shrink: 0; }
-        .nav-btn { width: 45px; height: 45px; border-radius: 50%; background: #f8f9fa; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid #eee; cursor: pointer; }
-        .full-page { position: absolute; top: 0; left: 100%; width: 100%; height: 100%; background: white; z-index: 5000; transition: 0.3s; padding: 20px; overflow-y: auto; }
-        .full-page.active { left: 0; }        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; }
-        .bottom-sheet { position: fixed; bottom: -100%; left: 50%; transform: translateX(-50%); width: 360px; background: white; border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 2000; transition: 0.4s; padding: 15px 0; }
-        .bottom-sheet.show { bottom: 0; }
-        .menu-option { padding: 15px 25px; display: flex; align-items: center; gap: 15px; cursor: pointer; }
-        .emoji-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 15px; }
-        .emoji-item { font-size: 28px; text-align: center; padding: 8px; cursor: pointer; border-radius: 8px; }
-        .emoji-item:active { background: #eee; }
-        .floating-emoji { position: absolute; font-size: 30px; z-index: 3000; pointer-events: none; animation: floatAndFade 2s ease-out forwards; }
-        @keyframes floatAndFade {
-            0% { opacity: 1; transform: translateY(0) scale(0.8); }
-            20% { opacity: 1; transform: translateY(-10px) scale(1.2); }
-            100% { opacity: 0; transform: translateY(-60px) scale(1); }
-        }
-        .drop-gift-on-seat { position: absolute; font-size: 26px; z-index: 3500; animation: dropIn 0.8s ease-out forwards; }
-        @keyframes dropIn {
-            0% { transform: translateY(-40px) scale(1.3); opacity: 0; }
-            50% { transform: translateY(5px) scale(0.9); opacity: 1; }
-            70% { transform: translateY(-3px) scale(1.05); }
-            100% { transform: translateY(0) scale(1); opacity: 1; }
-        }
-        .coin-indicator {
-            display: block; font-size: 9px; color: #ffd700; font-weight: bold; margin-top: 2px;
-            text-shadow: 0 0 3px rgba(0,0,0,0.6); background: rgba(0,0,0,0.5);
-            border-radius: 10px; padding: 1px 5px; line-height: 1.2;
-        }
-        .gift-overlay-new { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); backdrop-filter: blur(12px); z-index: 6000; justify-content: center; align-items: flex-end; }
-        .gift-overlay-new.active { display: flex; }
-        .gift-panel {
-            background: rgba(22,22,45,0.95); backdrop-filter: blur(25px); width: 360px; height: 80vh;
-            border-radius: 32px 32px 0 0; padding: 25px 20px 15px; display: flex; flex-direction: column;
-            border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 -10px 50px rgba(0,0,0,0.6);
-            animation: slideUp 0.5s ease; color: white; position: relative;
-        }
-        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .coin-ring { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 8px; background: rgba(255,215,0,0.1); border: 2px solid rgba(255,215,0,0.4); border-radius: 50px; padding: 6px 14px; }
-        .coin-icon { font-size: 24px; }
-        .coin-amount { font-size: 18px; font-weight: 700; color: #ffd700; }
-        .profile-pic-gift { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255,255,255,0.25); }
-        .panel-header { display: flex; justify-content: space-between; margin-bottom: 15px; padding: 0 10px; }
-        .close-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 22px; cursor: pointer; }
-        .gift-grid-new { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; overflow-y: auto; flex: 1; padding: 0 5px 15px; }
-        .gift-item-new { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
-        .gift-item-new.selected .gift-box-new { border: 3px solid #ffd700; box-shadow: 0 0 20px rgba(255,215,0,0.6); }
-        .gift-box-new { width: 100%; aspect-ratio: 1/1; background: rgba(15,25,45,0.7); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; font-size: 30px; }
-        .gift-box-new img { width: 100%; height: 100%; object-fit: cover; position: absolute; }
-        .gift-label-new { background: rgba(255,51,102,0.2); border: 1px solid rgba(255,51,102,0.3); color: #ff7b9c; font-weight: 700; font-size: 13px; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .gift-price-new { font-size: 11px; font-weight: 600; color: #ff5252; background: rgba(255,82,82,0.15); padding: 2px 6px; border-radius: 10px; }
-        .send-btn-container { display: flex; justify-content: center; margin-top: 10px; height: 50px; }
-        .send-btn-new { display: none; background: linear-gradient(135deg, #f1c40f, #f39c12); border: none; color: #000; font-weight: 700; font-size: 18px; padding: 12px 40px; border-radius: 50px; cursor: pointer; }
-        .send-btn-new.show { display: inline-block; }
-        .video-overlay-new { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 7000; justify-content: center; align-items: center; }
-        .video-overlay-new.active { display: flex; }
-        #introVideo { width: 100%; height: 100%; object-fit: cover; }
-        .emoji-overlay-new { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 7000; justify-content: center; align-items: center; }
+        .label { font-size: 10px; margin-top: 4px; font-weight: bold; color: #ccc; width: 46px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+        .lock-overlay { display: none; position: absolute; top: 10px; font-size: 14px; z-index: 10; }
+        .mute-badge { display: none; position: absolute; bottom: 1px; right: 1px; background: red; color: white; border-radius: 50%; width: 15px; height: 15px; font-size: 10px; text-align: center; line-height: 15px; z-index: 20; }
+        .listener-section { margin-top: 10px; }
+        #bottom-profile { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+        .avatar-l { width: 46px; height: 46px; border-radius: 50%; background: #444; background-size: cover; position: relative; }.footer-nav { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #16213e; border-top: 1px solid #222; }
+.nav-btn { width: 42px; height: 42px; border-radius: 50%; background: #2a2a4a; display: flex; align-items: center; justify-content: center; font-size: 20px; border: none; cursor: pointer; color: white; }
+.full-page { position: absolute; top: 0; left: 100%; width: 100%; height: 100%; background: #1a1a2e; z-index: 5000; transition: 0.3s; padding: 20px; overflow-y: auto; color: white; }
+.full-page.active { left: 0; }
+.overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; }
+.bottom-sheet { position: fixed; bottom: -100%; left: 50%; transform: translateX(-50%); width: 380px; max-width: 90vw; background: #1e1e3a; border-radius: 20px 20px 0 0; z-index: 2000; transition: 0.4s; padding: 15px 0; color: white; }
+.bottom-sheet.show { bottom: 0; }
+.menu-option { padding: 14px 25px; display: flex; align-items: center; gap: 15px; cursor: pointer; }
+.emoji-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 15px; }
+.emoji-item { font-size: 28px; text-align: center; padding: 8px; cursor: pointer; border-radius: 8px; }
+.emoji-item:active { background: #333; }
+.floating-emoji { position: absolute; font-size: 30px; z-index: 3000; pointer-events: none; animation: floatAndFade 2s ease-out forwards; }
+@keyframes floatAndFade {
+    0% { opacity: 1; transform: translateY(0) scale(0.8); }
+    20% { opacity: 1; transform: translateY(-10px) scale(1.2); }
+    100% { opacity: 0; transform: translateY(-60px) scale(1); }
+}
+.gift-overlay-new { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 6000; justify-content: center; align-items: flex-end; }
+.gift-overlay-new.active { display: flex; }
+.gift-panel {
+    background: rgba(20,20,40,0.95); backdrop-filter: blur(25px); width: 380px; max-width: 90vw; height: 80vh;
+    border-radius: 32px 32px 0 0; padding: 25px 20px 15px; display: flex; flex-direction: column;
+    border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 -10px 50px rgba(0,0,0,0.6);
+    animation: slideUp 0.5s ease; position: relative; color: white;
+}
+@keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.coin-ring { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 8px; background: rgba(255,215,0,0.1); backdrop-filter: blur(10px); border: 2px solid rgba(255,215,0,0.4); border-radius: 50px; padding: 6px 14px; box-shadow: 0 4px 15px rgba(255,215,0,0.3); z-index: 10; }
+.coin-icon { font-size: 24px; }
+.coin-amount { font-size: 18px; font-weight: 700; color: #ffd700; }
+.profile-area { display: flex; justify-content: center; margin-bottom: 15px; margin-top: 20px; }
+.profile-pic-gift { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255,255,255,0.25); }
+.panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 0 10px; }
+.panel-header h3 { font-size: 20px; font-weight: 700; }
+.close-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.gift-grid-new { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; overflow-y: auto; flex: 1; padding: 0 5px 15px; }
+.gift-item-new { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+.gift-item-new.selected .gift-box-new { border: 3px solid #ffd700; box-shadow: 0 0 20px rgba(255,215,0,0.6); }
+.gift-box-new { width: 100%; aspect-ratio: 1/1; background: rgba(30,30,50,0.7); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); overflow: hidden; position: relative; font-size: 30px; }
+.gift-box-new img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
+.gift-label-new { background: rgba(255,51,102,0.2); border: 1px solid rgba(255,51,102,0.3); color: #ff7b9c; font-weight: 700; font-size: 13px; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.gift-price-new { font-size: 11px; font-weight: 600; color: #ff5252; background: rgba(255,82,82,0.15); padding: 2px 6px; border-radius: 10px; }
+.send-btn-container { display: flex; justify-content: center; margin-top: 10px; height: 50px; }
+.send-btn-new { display: none; background: linear-gradient(135deg,#f1c40f,#f39c12); border: none; color: #000; font-weight: 700; font-size: 18px; padding: 12px 40px; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 15px rgba(243,156,18,0.4); }
+.send-btn-new.show { display: inline-block; }
+.video-overlay-new { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 7000; justify-content: center; align-items: center; }
+.video-overlay-new.active { display: flex; }
+#introVideo { width: 100%; height: 100%; object-fit: cover; }        .emoji-overlay-new { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 7000; justify-content: center; align-items: center; }
         .emoji-overlay-new.active { display: flex; }
-        .big-emoji { font-size: 150px; transition: transform 0.6s ease, opacity 0.6s; }
+        .big-emoji { font-size: 150px; transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.6s; transform: scale(1); opacity: 1; }
         .big-emoji.shrink { transform: scale(0.1) translateY(100px); opacity: 0; }
-        .fly-gift-to-seat { position: fixed; font-size: 50px; z-index: 8000; pointer-events: none; transition: all 0.8s ease; filter: drop-shadow(0 0 15px gold); }
+        .fly-gift-to-seat { position: fixed; font-size: 50px; z-index: 8000; pointer-events: none; transition: all 0.8s cubic-bezier(0.25,0.46,0.45,0.94); filter: drop-shadow(0 0 15px gold); transform: scale(1); }
+        .half-profile-view {
+            position: fixed; bottom: 0; left: 0; width: 100%; background: #1e1e3a; border-radius: 20px 20px 0 0;
+            padding: 30px 20px; z-index: 8000; display: none; flex-direction: column; align-items: center;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5); color: white;
+        }
+        .half-profile-view img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 15px; }
+        .half-profile-view .close-half-view {
+            align-self: flex-end; background: #333; border: none; width: 30px; height: 30px;
+            border-radius: 50%; font-size: 18px; cursor: pointer; color: white;
+        }
+        .full-page input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #555; background: #2a2a4a; color: white; border-radius: 8px; }
+        .full-page button { background: #e94560; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: 700; cursor: pointer; }
     </style>
 </head>
-<body><div class="app-container">
+<body>
+<div class="app-container" id="mainApp">
     <div class="top-header">
         <div class="profile-group" onclick="togglePage('settingsPage', true)">
             <img src="https://via.placeholder.com/40" id="headerAvatar" class="group-avatar">
-            <div><span id="headerGroupName" style="font-size:14px; font-weight:bold;">n {mohj}</span><br><span style="font-size:10px; color:#888;">সদস্য: 7</span></div>
+            <div>
+                <span id="headerGroupName" style="font-size:14px; font-weight:bold;">Voice Club</span>
+                <br><span id="onlineCount" style="font-size:10px; color:#aaa;">সদস্য: 0</span>
+            </div>
         </div>
-        <div><span onclick="togglePage('exitPage', true)" style="cursor:pointer">✕</span></div>
+        <div class="header-icons">
+            <span onclick="togglePage('exitPage', true)">✕</span>
+        </div>
     </div>
-
-    <div class="status-container">
-        <span id="displayTopic">আমি তোমাকে ভালোবাসি 💘</span>
+    <div class="status-bar">
+        <span id="displayTopic">আড্ডা চলছে 🎙️</span>
         <span onclick="openTopicEditor()" style="cursor:pointer; color:#00c3ff;">✎</span>
     </div>
     <div id="topic-editor">
-        <input type="text" id="topicInput" style="width:75%; padding:8px;">
-        <button onclick="saveTopic()" style="padding:8px 15px; background:#00c3ff; color:white; border:none;">ওকে</button>
+        <input type="text" id="topicInput" placeholder="টপিক লিখুন..." style="width:75%; padding:8px; color:black;">
+        <button onclick="saveTopic()" style="padding:8px 15px; background:#00c3ff; color:white; border:none; border-radius:5px;">ওকে</button>
     </div>
-
-    <div class="seats-grid" id="seatsContainer"></div>
-
-    <div class="listener-section">
-        <p style="color:#888; font-size:12px; margin-bottom:5px;">শ্রোতা</p>
-        <div id="bottom-profile" style="visibility:visible;">
-            <div class="avatar-l" id="listenerAvatar">
-                <img src="https://via.placeholder.com/55" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
-                <span class="mute-badge" style="display:none;">🔇</span>
+    <div class="main-content">
+        <div class="seats-grid" id="seatsContainer"></div>
+        <div class="listener-section">
+            <p style="color:#aaa; font-size:12px; margin-bottom:5px;">👥 শ্রোতা</p>
+            <div id="bottom-profile" onclick="openProfileView()">
+                <div class="avatar-l" id="myAvatar"></div>
+                <div class="label" id="myNameLabel" style="text-align:center;">আমি</div>
+                <div style="font-size:9px; color:#aaa;" id="myUidLabel"></div>
             </div>
-            <div class="label" style="text-align:center;" id="listenerName">MOHAJ</div>
         </div>
     </div>
-
     <div class="footer-nav">
         <div class="nav-btn" id="micTrigger">🎤</div>
         <div class="nav-btn" id="emojiTrigger">😊</div>
-        <div class="nav-btn" id="giftTrigger" style="background:#00c3ff; color:white;">🎁</div>
-    </div>
-
+        <div class="nav-btn" id="giftTrigger" style="background:#e94560;">🎁</div>
+    </div>    <!-- Settings Page -->
     <div class="full-page" id="settingsPage">
-        <div onclick="togglePage('settingsPage', false)" style="cursor:pointer; margin-bottom:20px;">⬅ গ্রুপ সেটিংস</div>
+        <div onclick="togglePage('settingsPage', false)" style="cursor:pointer; margin-bottom:20px; font-weight:bold;">⬅ গ্রুপ সেটিংস</div>
         <div style="text-align:center;">
             <div id="cropper-container"></div>
-            <button onclick="document.getElementById('fileInput').click()">ছবি বাছুন</button>
+            <button onclick="document.getElementById('fileInput').click()" style="background:#0f3460; margin-bottom:10px;">ছবি বাছুন</button>
             <input type="file" id="fileInput" hidden onchange="initCrop(event)">
-            <input type="text" id="gNameInput" style="width:100%; padding:12px; margin-top:10px;" placeholder="গ্রুপের নতুন নাম...">
-            <button onclick="applySettings()" style="width:100%; padding:12px; background:#00c3ff; color:white; border:none; margin-top:10px;">সেভ করুন</button>
+            <input type="text" id="gNameInput" placeholder="গ্রুপের নতুন নাম...">
+            <button onclick="applySettings()">সেভ করুন</button>
         </div>
     </div>
-
     <div class="full-page" id="exitPage">
         <div style="height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center;">
             <h2>বাহির হতে চান?</h2>
             <div style="display:flex; gap:20px; width:100%; margin-top:20px;">
-                <button onclick="togglePage('exitPage', false)" style="flex:1; padding:15px;">না</button>
-                <button onclick="location.reload()" style="flex:1; padding:15px; background:red; color:white;">হ্যাঁ</button>
+                <button onclick="togglePage('exitPage', false)" style="background:#444;">না</button>
+                <button onclick="location.reload()" style="background:red;">হ্যাঁ</button>
             </div>
         </div>
     </div>
 </div>
-
 <!-- Overlays & Sheets -->
 <div class="overlay" id="overlay" onclick="closeAllMenus()"></div>
 <div class="bottom-sheet" id="emptySeatMenu">
     <div class="menu-option" onclick="takeMic()"><span>🛋️</span> মাইক নিন</div>
-    <div class="menu-option" onclick="toggleLock()"><span id="lIcon">🔒</span> <span id="lText">মাইক লক করুন</span></div>
+    <div class="menu-option" onclick="toggleLockOnSeat()"><span id="lIcon">🔒</span> <span id="lText">মাইক লক করুন</span></div>
 </div>
 <div class="bottom-sheet" id="activeUserMenu">
+    <div class="menu-option" onclick="viewSeatProfile()"><span>👤</span> প্রোফাইল দেখুন</div>
     <div class="menu-option" onclick="sendGiftToSeat()"><span>🎁</span> গিফট পাঠান</div>
     <div class="menu-option" style="color:red;" onclick="releaseMic()"><span>🛋️</span> মাইক শেষ করুন</div>
 </div>
 <div class="bottom-sheet" id="emojiPanel">
-    <div style="text-align:center; padding:10px; font-weight:bold;">ইমোজি রিঅ্যাক্ট করুন</div>
+    <div style="text-align:center; font-weight:bold; padding:10px;">ইমোজি রিঅ্যাক্ট করুন</div>
     <div class="emoji-grid" id="emojiGrid"></div>
 </div>
 <div class="bottom-sheet" id="micPanel">
-    <div style="text-align:center; padding:10px; font-weight:bold;">মাইক কন্ট্রোল</div>
-    <div class="menu-option" onclick="toggleMute()">
+    <div style="text-align:center; font-weight:bold; padding:10px;">মাইক কন্ট্রোল</div>
+    <div class="menu-option" id="muteOption" onclick="toggleMute()">
         <span id="micOptionIcon">🔇</span> <span id="micOptionText">মাইক বন্ধ করুন</span>
     </div>
 </div>
-
+<!-- গিফট প্যানেল -->
 <div class="gift-overlay-new" id="giftOverlayNew">
     <div class="gift-panel">
         <div class="coin-ring"><span class="coin-icon">🪙</span><span class="coin-amount" id="coinBalance">50000</span></div>
-        <div style="display:flex; justify-content:center; margin-top:20px;"><img class="profile-pic-gift" id="giftTargetImg" src="https://via.placeholder.com/70"></div>
+        <div class="profile-area"><img class="profile-pic-gift" id="giftTargetImg" src="https://via.placeholder.com/70"></div>
         <div class="panel-header"><h3>🎁 উপহার পাঠান</h3><button class="close-btn" id="closeGiftBtnNew">&times;</button></div>
         <div class="gift-grid-new" id="giftGridNew"></div>
-        <div class="send-btn-container"><button class="send-btn-new" id="sendButtonNew">📤 পাঠান</button></div>
+        <div class="send-btn-container"><button class="send-btn-new" id="sendButtonNew">📤 ছেন</button></div>
     </div>
 </div>
 <div class="video-overlay-new" id="videoOverlayNew"><video id="introVideo" preload="auto" playsinline></video></div>
-<div class="emoji-overlay-new" id="emojiOverlayNew"><span class="big-emoji" id="bigEmoji">🎉</span></div><script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.11.0.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
-
-<script type="module">
-    // ---------- Firebase ----------
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-    import { getDatabase, ref, set, onValue, push, update, get, child } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
-
+<div class="emoji-overlay-new" id="emojiOverlayNew"><span class="big-emoji" id="bigEmoji">🎉</span></div>
+<div class="half-profile-view" id="halfProfileView">
+    <button class="close-half-view" onclick="document.getElementById('halfProfileView').style.display='none'">✕</button>
+    <img id="halfProfileImg" src="https://via.placeholder.com/100">
+    <h3 id="halfProfileName"></h3>
+    <p id="halfProfileUid"></p>
+</div><script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
+<script>
+    // Firebase config
     const firebaseConfig = {
         apiKey: "AIzaSyDXwE6T6fOBBIbxWIMBPJoHN4PD9NXazKw",
         authDomain: "moi-project-25509.firebaseapp.com",
@@ -206,120 +214,347 @@
         messagingSenderId: "465225004410",
         appId: "1:465225004410:web:e266146adb1ccaca4992c3"
     };
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const ROOM_ID = 'room1';
-    const seatsRef = ref(db, `rooms/${ROOM_ID}/seats`);
-    const giftsRef = ref(db, `rooms/${ROOM_ID}/gifts`);
-    const emojiRef = ref(db, `rooms/${ROOM_ID}/reactions`);
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    let userId = localStorage.getItem('voiceclub_userId');
-    if (!userId) {
-        userId = 'user_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('voiceclub_userId', userId);
-    }
-
-    // ---------- Agora ----------
     const AGORA_APP_ID = "3e98fdc6be38445f9e121e0ca61fef95";
-    const AGORA_CHANNEL = "GaddyProTest";
-    let agoraClient = null;
-    let localAudioTrack = null;
+    const CHANNEL = "GaddyProTest"; // আপনার চ্যানেল নাম
 
-    async function joinAgoraChannel() {
-        try {
-            agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-            await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, null, userId);
-            localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
-            await agoraClient.publish(localAudioTrack);
-            // দূরবর্তী অডিও শোনার জন্য ইভেন্ট
-            agoraClient.on("user-published", async (user, mediaType) => {
-                await agoraClient.subscribe(user, mediaType);
-                if (mediaType === "audio") user.audioTrack.play();
-            });
-        } catch (e) { console.error("Agora error:", e); }
-    }
-
-    async function leaveAgoraChannel() {
-        if (localAudioTrack) { localAudioTrack.close(); localAudioTrack = null; }
-        if (agoraClient) { await agoraClient.unpublish(); await agoraClient.leave(); agoraClient = null; }
-    }
-
-    function toggleAgoraMute(muted) {
-        if (localAudioTrack) localAudioTrack.setEnabled(!muted);
-    }
-
-    // ---------- গিফট সংজ্ঞা (সম্পূর্ণ) ----------
-    const G1_IMG = 'https://raw.githubusercontent.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/main/IMG_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A6%E0%A7%A8%E0%A7%AB%E0%A7%AF%E0%A7%A6%E0%A7%AA.jpg';
-    const G1_VID = 'https://github.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/raw/refs/heads/main/lv_0_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD%E0%A7%A6%E0%A7%A8%E0%A7%AB%E0%A7%AD%E0%A7%AB%E0%A7%A6.mp4';
-    const G2_IMG = 'https://raw.githubusercontent.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/main/IMG_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A6%E0%A7%A8%E0%A7%A6%E0%A7%AB%E0%A7%A9%E0%A7%A8.jpg';
-    const G2_VID = 'https://github.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/raw/refs/heads/main/VID_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A6%E0%A7%A8%E0%A7%A6%E0%A7%AA%E0%A7%A6%E0%A7%A6.mp4';
-    const G3_IMG = 'https://raw.githubusercontent.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/main/IMG_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A6%E0%A7%A7%E0%A7%A6%E0%A7%A6%E0%A7%AB%E0%A7%A7.jpg';
-    const G3_VID = 'https://github.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/raw/refs/heads/main/VID_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A6%E0%A7%A6%E0%A7%AB%E0%A7%AA%E0%A7%A9%E0%A7%AE.mp4';
-    const G4_IMG = 'https://raw.githubusercontent.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/main/IMG_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A8%E0%A7%A7%E0%A7%A6%E0%A7%AA%E0%A7%A6%E0%A7%A7.jpg';
-    const G4_VID = 'https://github.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/raw/refs/heads/main/VID_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A8%E0%A7%A7%E0%A7%A6%E0%A7%A7%E0%A7%A9%E0%A7%AA.mp4';
-
-    const gifts = [
-        { id: 1, type: 'video', imgSrc: G1_IMG, videoSrc: G1_VID, price: 1000, name: 'গিফট ১', icon: '🎁' },
-        { id: 2, type: 'video', imgSrc: G2_IMG, videoSrc: G2_VID, price: 2500, name: 'গিফট ২', icon: '🎁' },
-        { id: 3, type: 'video', imgSrc: G3_IMG, videoSrc: G3_VID, price: 3000, name: 'গিফট ৩', icon: '🎁' },
-        { id: 4, type: 'video', imgSrc: G4_IMG, videoSrc: G4_VID, price: 5000, name: 'গিফট ৪', icon: '🎁' },
-        { id: 5, type: 'emoji', emoji: '🎉', price: 5, name: 'পার্টি', icon: '🎉' },
-        { id: 6, type: 'emoji', emoji: '❤️', price: 10, name: 'হার্ট', icon: '❤️' },
-        { id: 7, type: 'emoji', emoji: '🌟', price: 15, name: 'স্টার', icon: '🌟' },
-        { id: 8, type: 'emoji', emoji: '🔥', price: 20, name: 'ফায়ার', icon: '🔥' },
-        { id: 9, type: 'emoji', emoji: '💎', price: 25, name: 'ডায়মন্ড', icon: '💎' },
-        { id: 10, type: 'emoji', emoji: '🎈', price: 50, name: 'বেলুন', icon: '🎈' },
-        { id: 11, type: 'emoji', emoji: '🎵', price: 60, name: 'মিউজিক', icon: '🎵' },
-        { id: 12, type: 'emoji', emoji: '👑', price: 80, name: 'ক্রাউন', icon: '👑' }
-    ];
-
-    let seatsData = {};
+    let localUid = localStorage.getItem("voiceclub_uid");
+    let localUserData = null;
     let userCurrentSeat = null;
     let activeSeat = null;
     let giftTargetSeat = null;
     let isMuted = false;
-    let coinBalance = 50000;
     let selectedGiftId = null;
-    let currentSentGift = null;
-    let croppie = null;
+    let coinBalance = 50000;
+    let agoraClient = null;
+    let localAudioTrack = null;
+    let rtmChannel = null;
 
-    const giftOverlayNew = document.getElementById('giftOverlayNew');
-    const giftGridNew = document.getElementById('giftGridNew');
-    const sendBtnNew = document.getElementById('sendButtonNew');
-    const videoOverlayNew = document.getElementById('videoOverlayNew');
-    const introVideo = document.getElementById('introVideo');
-    const emojiOverlayNew = document.getElementById('emojiOverlayNew');
-    const bigEmoji = document.getElementById('bigEmoji');
-
-    function updateCoinDisplay() { document.getElementById('coinBalance').textContent = coinBalance.toLocaleString(); }
-
-    function renderGifts() {
-        giftGridNew.innerHTML = '';
-        gifts.forEach(gift => {
-            const div = document.createElement('div');
-            div.className = `gift-item-new ${selectedGiftId === gift.id ? 'selected' : ''}`;
-            div.dataset.giftId = gift.id;
-            let box = gift.type === 'video' ? `<img src="${gift.imgSrc}" alt="Gift">` : `<span style="font-size:32px;">${gift.emoji}</span>`;
-            div.innerHTML = `<div class="gift-box-new">${box}</div><div class="gift-label-new">${gift.id}</div><div class="gift-price-new">🪙 ${gift.price}</div>`;
-            div.addEventListener('click', () => selectGift(gift.id));
-            giftGridNew.appendChild(div);
+    // ---------- ইউজার লগইন ----------
+    if (!localUid) {
+        // প্রথমবার এলে প্রোফাইল পপআপ (সরলীকৃত)
+        let name = prompt("আপনার নাম লিখুন:");
+        if (!name) name = "অতিথি";
+        const userRef = db.ref('users').push();
+        localUid = userRef.key;
+        localUserData = { name, photoURL: 'https://via.placeholder.com/100', coins: 50000 };
+        userRef.set(localUserData);
+        localStorage.setItem('voiceclub_uid', localUid);
+    } else {
+        db.ref('users/' + localUid).once('value').then(snap => {
+            if (snap.exists()) {
+                localUserData = snap.val();
+            } else {
+                localStorage.removeItem('voiceclub_uid');
+                location.reload();
+            }
+            startApp();
         });
-        sendBtnNew.classList.toggle('show', !!selectedGiftId);
+    }
+    if (localUserData) startApp();
+
+    function startApp() {
+        updateMyProfileUI();
+        createSeats();
+        listenSeatStates();
+        listenGroupInfo();
+        joinRoom();
+        setMyPresence(true);
+        updateCoinDisplay();
+        renderGifts();
+        setupEmojiGrid();
     }
 
-    function selectGift(id) { selectedGiftId = id; renderGifts(); }
+    function updateMyProfileUI() {
+        if (!localUserData) return;
+        document.getElementById('myAvatar').style.backgroundImage = `url(${localUserData.photoURL})`;
+        document.getElementById('myNameLabel').innerText = localUserData.name;
+        document.getElementById('myUidLabel').innerText = `ID: ${localUid}`;
+        coinBalance = localUserData.coins || 50000;
+        updateCoinDisplay();
+    }
 
-    function animateGiftToSeat(target, gift) {
-        const circle = target.querySelector('.circle');
+    function createSeats() {
+        const container = document.getElementById('seatsContainer');
+        container.innerHTML = '';
+        for (let i = 1; i <= 20; i++) {
+            const seatId = i === 1 ? 'host' : i;
+            container.innerHTML += `<div class="seat-item" data-seat="${seatId}" onclick="handleSeatClick(this, '${seatId}')"><div class="circle">🛋️<span class="lock-overlay">🔒</span><span class="mute-badge">🔇</span></div><div class="label" data-num="${seatId}">${seatId}</div></div>`;
+        }
+    }// 🔥 রিয়েল-টাইম সিট স্টেট (সবার জন্য)
+function listenSeatStates() {
+    db.ref('seats').on('value', snap => {
+        const seats = snap.val() || {};
+        document.querySelectorAll('.seat-item').forEach(el => {
+            const sid = el.dataset.seat;
+            const data = seats[sid];
+            const circle = el.querySelector('.circle');
+            const label = el.querySelector('.label');
+            if (data && data.userId) {
+                circle.innerHTML = `<img src="${data.photoURL}" class="user-img"><span class="lock-overlay" style="display:${data.locked?'block':'none'}">🔒</span><span class="mute-badge" style="display:${data.muted?'block':'none'}">🔇</span>`;
+                label.innerText = data.name;
+            } else {
+                circle.innerHTML = `🛋️<span class="lock-overlay" style="display:${data?.locked?'block':'none'}">🔒</span><span class="mute-badge">🔇</span>`;
+                label.innerText = sid;
+            }
+        });
+        // অনলাইন কাউন্ট
+        db.ref('activeUsers').once('value', s => {
+            document.getElementById('onlineCount').innerText = `সদস্য: ${s.numChildren()}`;
+        });
+    });
+}
+
+// 🔥 গ্রুপ ইনফো (ছবি ও নাম) সবাই দেখবে
+function listenGroupInfo() {
+    db.ref('roomInfo').on('value', snap => {
+        const data = snap.val() || {};
+        if (data.name) document.getElementById('headerGroupName').innerText = data.name;
+        if (data.photoURL) document.getElementById('headerAvatar').src = data.photoURL;
+    });
+}
+
+function setMyPresence(active) {
+    if (active) {
+        db.ref(`activeUsers/${localUid}`).set({ name: localUserData?.name, photoURL: localUserData?.photoURL });
+    } else {
+        db.ref(`activeUsers/${localUid}`).remove();
+        if (userCurrentSeat) removeSeatFromFirebase(userCurrentSeat.dataset.seat);
+    }
+}
+
+function removeSeatFromFirebase(seatId) { db.ref(`seats/${seatId}`).remove(); }
+function updateSeatInFirebase(seatId, data) { db.ref(`seats/${seatId}`).update(data); }
+
+// Agora RTC + RTM
+async function joinRoom() {
+    agoraClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+    localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+    localAudioTrack.setEnabled(false);
+    await agoraClient.join(AGORA_APP_ID, CHANNEL, null, localUid);
+    await agoraClient.publish(localAudioTrack);
+    agoraClient.on('user-published', async (user, mediaType) => {
+        await agoraClient.subscribe(user, mediaType);
+        if (mediaType === 'audio') user.audioTrack.play();
+    });
+
+    // RTM
+    const rtmClient = AgoraRTM.createInstance(AGORA_APP_ID);
+    await rtmClient.login({ uid: localUid });
+    rtmChannel = rtmClient.createChannel(CHANNEL);
+    await rtmChannel.join();
+    rtmChannel.on('ChannelMessage', (message, senderId) => {
+        if (senderId === localUid) return;
+        try {
+            const data = JSON.parse(message.text);
+            if (data.type === 'emoji') showRemoteFloatingEmoji(data.emoji, data.senderSeat);
+            else if (data.type === 'gift') showRemoteGiftAnimation(data.gift, data.targetSeat);
+        } catch(e) {}
+    });
+}
+
+function sendRTMMessage(data) { if (rtmChannel) rtmChannel.sendMessage({ text: JSON.stringify(data) }); }
+
+function showRemoteFloatingEmoji(emoji, senderSeatId) {
+    const target = document.querySelector(`.seat-item[data-seat="${senderSeatId}"] .circle`) || document.querySelector('#bottom-profile .avatar-l');
+    if (!target) return;
+    const floatEl = document.createElement('div');
+    floatEl.className = 'floating-emoji'; floatEl.textContent = emoji;
+    target.appendChild(floatEl);
+    floatEl.addEventListener('animationend', () => floatEl.remove());
+}
+
+function showRemoteGiftAnimation(gift, targetSeatId) {
+    const targetSeat = document.querySelector(`.seat-item[data-seat="${targetSeatId}"]`);
+    if (!targetSeat) return;
+    const circle = targetSeat.querySelector('.circle');
+    const fly = document.createElement('div');
+    fly.className = 'fly-gift-to-seat'; fly.textContent = gift.icon;
+    document.body.appendChild(fly);
+    const r = circle.getBoundingClientRect();
+    fly.style.left = '50%'; fly.style.top = '50%';
+    requestAnimationFrame(() => {
+        fly.style.left = (r.left + r.width/2 - 25) + 'px';
+        fly.style.top = (r.top + r.height/2 - 25) + 'px';
+        fly.style.transform = 'scale(0.3)';
+    });
+    fly.addEventListener('transitionend', () => {
+        fly.remove();
+        const drop = document.createElement('div');
+        drop.className = 'drop-gift-on-seat'; drop.textContent = gift.icon;
+        circle.appendChild(drop);
+        drop.addEventListener('animationend', () => drop.remove());
+    });
+    }// Seat click handlers
+function handleSeatClick(el, id) {
+    activeSeat = el;
+    document.getElementById('overlay').style.display = 'block';
+    document.querySelectorAll('.bottom-sheet').forEach(m => m.classList.remove('show'));
+    if (userCurrentSeat === el) {
+        document.getElementById('activeUserMenu').classList.add('show');
+    } else {
+        const locked = el.querySelector('.lock-overlay').style.display === 'block';
+        document.getElementById('lText').innerText = locked ? "মাইক আনলক করুন" : "মাইক লক করুন";
+        document.getElementById('emptySeatMenu').classList.add('show');
+    }
+}
+
+function takeMic() {
+    const seatId = activeSeat.dataset.seat;
+    if (activeSeat.querySelector('.lock-overlay').style.display === 'block') return alert("সিট লক!");
+    if (userCurrentSeat) releaseMic(true);
+    updateSeatInFirebase(seatId, {
+        userId: localUid,
+        name: localUserData.name,
+        photoURL: localUserData.photoURL,
+        locked: false,
+        muted: false
+    });
+    userCurrentSeat = activeSeat;
+    isMuted = false;
+    if (localAudioTrack) localAudioTrack.setEnabled(true);
+    document.getElementById('bottom-profile').style.visibility = 'hidden';
+    closeAllMenus();
+}
+
+function releaseMic() {
+    if (!userCurrentSeat) return;
+    removeSeatFromFirebase(userCurrentSeat.dataset.seat);
+    userCurrentSeat = null;
+    if (localAudioTrack) localAudioTrack.setEnabled(false);
+    document.getElementById('bottom-profile').style.visibility = 'visible';
+    closeAllMenus();
+}
+
+function toggleLockOnSeat() {
+    const seatId = activeSeat.dataset.seat;
+    const locked = activeSeat.querySelector('.lock-overlay').style.display === 'block';
+    updateSeatInFirebase(seatId, { locked: !locked });
+    closeAllMenus();
+}
+
+function toggleMute() {
+    isMuted = !isMuted;
+    if (localAudioTrack) localAudioTrack.setEnabled(!isMuted);
+    if (userCurrentSeat) updateSeatInFirebase(userCurrentSeat.dataset.seat, { muted: isMuted });
+    document.getElementById('micOptionIcon').textContent = isMuted ? '🎤' : '🔇';
+    document.getElementById('micOptionText').textContent = isMuted ? 'মাইক চালু করুন' : 'মাইক বন্ধ করুন';
+    closeAllMenus();
+}
+
+document.getElementById('micTrigger').onclick = () => {
+    if (!userCurrentSeat) return alert('আগে সিটে বসুন।');
+    document.querySelectorAll('.bottom-sheet').forEach(m => m.classList.remove('show'));
+    document.getElementById('micPanel').classList.add('show');
+    document.getElementById('overlay').style.display = 'block';
+};// ইমোজি
+function setupEmojiGrid() {
+    const emojiList = ['😂','❤️','😍','🔥','😭','😡','👍','🎉','💔','🤣','😎','🥳','😇','💋','🙏'];
+    const grid = document.getElementById('emojiGrid');
+    grid.innerHTML = '';
+    emojiList.forEach(emoji => {
+        const div = document.createElement('div');
+        div.className = 'emoji-item'; div.textContent = emoji;
+        div.onclick = () => sendReaction(emoji);
+        grid.appendChild(div);
+    });
+}
+document.getElementById('emojiTrigger').onclick = () => {
+    document.querySelectorAll('.bottom-sheet').forEach(m => m.classList.remove('show'));
+    document.getElementById('emojiPanel').classList.add('show');
+    document.getElementById('overlay').style.display = 'block';
+};
+function sendReaction(emoji) {
+    closeAllMenus();
+    const target = userCurrentSeat ? userCurrentSeat.querySelector('.circle') : document.querySelector('#bottom-profile .avatar-l');
+    if (target) {
+        const floatEl = document.createElement('div');
+        floatEl.className = 'floating-emoji'; floatEl.textContent = emoji;
+        target.appendChild(floatEl);
+        floatEl.addEventListener('animationend', () => floatEl.remove());
+    }
+    sendRTMMessage({ type: 'emoji', emoji, senderSeat: userCurrentSeat?.dataset.seat || null });
+}
+
+// গিফট
+const gifts = [
+    { id:1, type:'video', imgSrc:'https://raw.githubusercontent.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/main/IMG_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A6%E0%A7%A8%E0%A7%AB%E0%A7%AF%E0%A7%A6%E0%A7%AA.jpg', videoSrc:'https://github.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/raw/refs/heads/main/lv_0_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD%E0%A7%A6%E0%A7%A8%E0%A7%AB%E0%A7%AD%E0%A7%AB%E0%A7%A6.mp4', price:1000, name:'গিফট ১', icon:'🎁' },
+    { id:2, type:'video', imgSrc:'https://raw.githubusercontent.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/main/IMG_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A6%E0%A7%A8%E0%A7%A6%E0%A7%AB%E0%A7%A9%E0%A7%A8.jpg', videoSrc:'https://github.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/raw/refs/heads/main/VID_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A6%E0%A7%A8%E0%A7%A6%E0%A7%AA%E0%A7%A6%E0%A7%A6.mp4', price:2500, name:'গিফট ২', icon:'🎁' },
+    { id:3, type:'video', imgSrc:'https://raw.githubusercontent.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/main/IMG_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A6%E0%A7%A7%E0%A7%A6%E0%A7%A6%E0%A7%AB%E0%A7%A7.jpg', videoSrc:'https://github.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/raw/refs/heads/main/VID_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A6%E0%A7%A6%E0%A7%AB%E0%A7%AA%E0%A7%A9%E0%A7%AE.mp4', price:3000, name:'গিফট ৩', icon:'🎁' },
+    { id:4, type:'video', imgSrc:'https://raw.githubusercontent.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/main/IMG_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A8%E0%A7%A7%E0%A7%A6%E0%A7%AA%E0%A7%A6%E0%A7%A7.jpg', videoSrc:'https://github.com/mdmohaj2025-sys/Gaddy-Pro-live-chat-room/raw/refs/heads/main/VID_%E0%A7%A8%E0%A7%A6%E0%A7%A8%E0%A7%AC%E0%A7%A6%E0%A7%AA%E0%A7%A8%E0%A7%AD_%E0%A7%A8%E0%A7%A7%E0%A7%A6%E0%A7%A7%E0%A7%A9%E0%A7%AA.mp4', price:5000, name:'গিফট ৪', icon:'🎁' },
+    { id:5, type:'emoji', emoji:'🎉', price:5, name:'পার্টি', icon:'🎉' },
+    { id:6, type:'emoji', emoji:'❤️', price:10, name:'হার্ট', icon:'❤️' },
+    { id:7, type:'emoji', emoji:'🌟', price:15, name:'স্টার', icon:'🌟' },
+    { id:8, type:'emoji', emoji:'🔥', price:20, name:'ফায়ার', icon:'🔥' },
+    { id:9, type:'emoji', emoji:'💎', price:25, name:'ডায়মন্ড', icon:'💎' },
+    { id:10, type:'emoji', emoji:'🎈', price:50, name:'বেলুন', icon:'🎈' },
+    { id:11, type:'emoji', emoji:'🎵', price:60, name:'মিউজিক', icon:'🎵' },
+    { id:12, type:'emoji', emoji:'👑', price:80, name:'ক্রাউন', icon:'👑' }
+];function renderGifts() {
+    const grid = document.getElementById('giftGridNew');
+    grid.innerHTML = '';
+    gifts.forEach(gift => {
+        const div = document.createElement('div');
+        div.className = `gift-item-new ${selectedGiftId === gift.id ? 'selected' : ''}`;
+        div.innerHTML = `<div class="gift-box-new">${gift.type==='video'?`<img src="${gift.imgSrc}">`:gift.emoji}</div><div class="gift-label-new">${gift.id}</div><div class="gift-price-new">🪙 ${gift.price}</div>`;
+        div.onclick = () => { selectedGiftId = gift.id; renderGifts(); };
+        grid.appendChild(div);
+    });
+    document.getElementById('sendButtonNew').classList.toggle('show', !!selectedGiftId);
+}
+function updateCoinDisplay() { document.getElementById('coinBalance').innerText = coinBalance.toLocaleString(); }
+document.getElementById('sendButtonNew').onclick = () => {
+    const gift = gifts.find(g => g.id === selectedGiftId);
+    if (!gift) return;
+    if (coinBalance < gift.price) return alert('কয়েন কম!');
+    coinBalance -= gift.price;
+    updateCoinDisplay();
+    db.ref(`users/${localUid}/coins`).set(coinBalance);
+    document.getElementById('giftOverlayNew').classList.remove('active');
+    if (gift.type === 'video') {
+        introVideo.src = gift.videoSrc; introVideo.currentTime=0;
+        videoOverlayNew.classList.add('active'); introVideo.play().catch(()=>{});
+    } else {
+        bigEmoji.textContent = gift.emoji; bigEmoji.classList.remove('shrink');
+        emojiOverlayNew.classList.add('active');
+        setTimeout(() => bigEmoji.classList.add('shrink'), 100);
+        setTimeout(() => { emojiOverlayNew.classList.remove('active'); if (giftTargetSeat) animateGiftToSeat(giftTargetSeat, gift); }, 900);
+    }
+    sendRTMMessage({ type: 'gift', gift: { id: gift.id, icon: gift.icon, price: gift.price }, targetSeat: giftTargetSeat?.dataset.seat });
+};
+function sendGiftToSeat() {
+    giftTargetSeat = activeSeat;
+    closeAllMenus();
+    openGiftPanelForSeat(giftTargetSeat);
+}
+document.getElementById('giftTrigger').onclick = () => {
+    if (!userCurrentSeat) return alert('আগে সিটে বসুন।');
+    giftTargetSeat = userCurrentSeat;
+    openGiftPanelForSeat(giftTargetSeat);
+};
+function openGiftPanelForSeat(seat) {
+    const avatar = seat.querySelector('.user-img');
+    document.getElementById('giftTargetImg').src = avatar ? avatar.src : 'https://via.placeholder.com/70';
+    selectedGiftId = null;
+    renderGifts();
+    document.getElementById('giftOverlayNew').classList.add('active');
+}
+document.getElementById('closeGiftBtnNew').onclick = () => document.getElementById('giftOverlayNew').classList.remove('active');    // অন্যান্য ফাংশন
+    function animateGiftToSeat(targetSeat, gift) {
+        const circle = targetSeat.querySelector('.circle');
         if (!circle) return;
         const fly = document.createElement('div');
         fly.className = 'fly-gift-to-seat';
         fly.textContent = gift.icon;
         document.body.appendChild(fly);
-        const rect = circle.getBoundingClientRect();
-        Object.assign(fly.style, { left: (window.innerWidth/2-25)+'px', top: (window.innerHeight/2-25)+'px' });
+        const circleRect = circle.getBoundingClientRect();
+        const startX = window.innerWidth/2 - 25, startY = window.innerHeight/2 - 25;
+        const endX = circleRect.left + circleRect.width/2 - 25, endY = circleRect.top + circleRect.height/2 - 25;
+        Object.assign(fly.style, { left: startX+'px', top: startY+'px' });
         requestAnimationFrame(() => {
-            Object.assign(fly.style, { transform: 'scale(0.3)', left: (rect.left+rect.width/2-25)+'px', top: (rect.top+rect.height/2-25)+'px', opacity: '0.8' });
+            Object.assign(fly.style, { transform: 'scale(0.3)', left: endX+'px', top: endY+'px', opacity: '0.8' });
         });
         fly.addEventListener('transitionend', () => {
             fly.remove();
@@ -330,269 +565,30 @@
             drop.addEventListener('animationend', () => drop.remove());
         });
     }
-
-    // রিয়েল-টাইম গিফট
-    onValue(giftsRef, (snap) => {
-        const val = snap.val();
-        if (!val) return;
-        const keys = Object.keys(val);
-        const latest = val[keys[keys.length-1]];
-        if (latest.from === userId) return;
-        const seat = Array.from(document.querySelectorAll('.seat-item')).find(el => (el.querySelector('.label').dataset.num || 'host') === latest.toSeat);
-        if (!seat) return;
-        const giftDef = gifts.find(g => g.id === latest.giftId);
-        if (!giftDef) return;
-        if (giftDef.type === 'video') {
-            introVideo.src = giftDef.videoSrc;
-            introVideo.currentTime = 0;
-            videoOverlayNew.classList.add('active');
-            introVideo.play().catch(()=>{});
-            currentSentGift = giftDef;
-            giftTargetSeat = seat;
-        } else {
-            bigEmoji.textContent = giftDef.emoji;
-            bigEmoji.classList.remove('shrink');
-            emojiOverlayNew.classList.add('active');
-            setTimeout(() => bigEmoji.classList.add('shrink'), 100);
-            setTimeout(() => {
-                emojiOverlayNew.classList.remove('active');
-                if (seat) animateGiftToSeat(seat, giftDef);
-            }, 900);
-        }
-    });
-
-    // রিয়েল-টাইম ইমোজি রিঅ্যাকশন
-    onValue(emojiRef, (snap) => {
-        const val = snap.val();
-        if (!val) return;
-        const keys = Object.keys(val);
-        const latest = val[keys[keys.length-1]];
-        if (latest.from === userId) return;
-        const target = userCurrentSeat?.querySelector('.circle') || document.querySelector('#listenerAvatar');
-        if (target) {
-            const fl = document.createElement('div');
-            fl.className = 'floating-emoji';
-            fl.textContent = latest.emoji;
-            target.style.position = 'relative';
-            target.appendChild(fl);
-            fl.addEventListener('animationend', () => fl.remove());
-        }
-    });
-
-    // গিফট পাঠানো
-    sendBtnNew.addEventListener('click', () => {
-        const gift = gifts.find(g => g.id === selectedGiftId);
-        if (!gift) return;
-        if (coinBalance < gift.price) return alert('পর্যাপ্ত কয়েন নেই!');
-        coinBalance -= gift.price;
-        updateCoinDisplay();
-        currentSentGift = gift;
-        giftOverlayNew.classList.remove('active');
-        if (gift.type === 'video') {
-            introVideo.src = gift.videoSrc;
-            introVideo.currentTime = 0;
-            videoOverlayNew.classList.add('active');
-            introVideo.play().catch(()=>{});
-        } else {
-            bigEmoji.textContent = gift.emoji;
-            bigEmoji.classList.remove('shrink');
-            emojiOverlayNew.classList.add('active');
-            setTimeout(() => bigEmoji.classList.add('shrink'), 100);
-            setTimeout(() => {
-                emojiOverlayNew.classList.remove('active');
-                if (giftTargetSeat) animateGiftToSeat(giftTargetSeat, gift);
-            }, 900);
-        }
-        if (giftTargetSeat) {
-            push(giftsRef, {
-                giftId: gift.id, name: gift.name, icon: gift.icon, type: gift.type,
-                from: userId,
-                toSeat: giftTargetSeat.querySelector('.label').dataset.num || 'host',
-                timestamp: Date.now()
-            });
-        }
-    });
-
-    introVideo.addEventListener('ended', () => {
-        videoOverlayNew.classList.remove('active');
-        if (giftTargetSeat && currentSentGift) animateGiftToSeat(giftTargetSeat, currentSentGift);
-    });
-    document.getElementById('closeGiftBtnNew').addEventListener('click', () => giftOverlayNew.classList.remove('active'));    // সিট রেন্ডারিং
-    function renderAllSeats() {
-        document.querySelectorAll('.seat-item').forEach(item => {
-            const label = item.querySelector('.label');
-            const circle = item.querySelector('.circle');
-            const seatId = label.dataset.num || 'host';
-            const data = seatsData[seatId] || { userId: null, isLocked: false, isMuted: false };
-            circle.querySelector('.lock-overlay').style.display = data.isLocked ? 'block' : 'none';
-            if (data.userId) {
-                const isMe = data.userId === userId;
-                circle.innerHTML = `<img src="https://via.placeholder.com/55" class="user-img"><span class="lock-overlay">🔒</span><span class="mute-badge">🔇</span>`;
-                circle.querySelector('.lock-overlay').style.display = data.isLocked ? 'block' : 'none';
-                circle.querySelector('.mute-badge').style.display = data.isMuted ? 'block' : 'none';
-                label.innerText = isMe ? 'MOHAJ' : (data.userName || data.userId.substring(0,6));
-                if (isMe) {
-                    userCurrentSeat = item;
-                    document.getElementById('bottom-profile').style.visibility = 'hidden';
-                    isMuted = data.isMuted;
-                }
-            } else {
-                circle.innerHTML = `🛋️<span class="lock-overlay">🔒</span><span class="mute-badge">🔇</span>`;
-                circle.querySelector('.mute-badge').style.display = 'none';
-                label.innerText = seatId === 'host' ? 'হোস্ট' : seatId;
-            }
-        });
-        const anyOwn = Array.from(document.querySelectorAll('.seat-item')).some(item => {
-            const sid = item.querySelector('.label').dataset.num || 'host';
-            return seatsData[sid]?.userId === userId;
-        });
-        if (!anyOwn) {
-            userCurrentSeat = null;
-            document.getElementById('bottom-profile').style.visibility = 'visible';
-            isMuted = false;
-        }
+    function openProfileView() {
+        if (!localUserData) return;
+        document.getElementById('halfProfileImg').src = localUserData.photoURL;
+        document.getElementById('halfProfileName').innerText = localUserData.name;
+        document.getElementById('halfProfileUid').innerText = `আইডি: ${localUid}`;
+        document.getElementById('halfProfileView').style.display = 'flex';
     }
-
-    onValue(seatsRef, (snap) => {
-        seatsData = snap.val() || {};
-        ['host',2,3,4,5,6,7,8,9,10].forEach(sid => { if (!seatsData[sid]) seatsData[sid] = { userId: null, isLocked: false, isMuted: false }; });
-        renderAllSeats();
-    });
-
-    function updateSeat(seatId, data) { update(ref(db), { [`rooms/${ROOM_ID}/seats/${seatId}`]: data }); }
-
-    // টপিক রিয়েল-টাইম
-    onValue(ref(db, `rooms/${ROOM_ID}/topic`), (snap) => { if (snap.val()) document.getElementById('displayTopic').innerText = snap.val(); });
-    window.openTopicEditor = () => document.getElementById('topic-editor').style.display = 'block';
-    window.saveTopic = () => {
-        const val = document.getElementById('topicInput').value;
-        if (val) set(ref(db, `rooms/${ROOM_ID}/topic`), val);
-        document.getElementById('topic-editor').style.display = 'none';
-    };
-
-    // গ্রুপ সেটিংস রিয়েল-টাইম
-    onValue(ref(db, `rooms/${ROOM_ID}/groupName`), (snap) => { if (snap.val()) document.getElementById('headerGroupName').innerText = snap.val(); });
-    onValue(ref(db, `rooms/${ROOM_ID}/groupAvatar`), (snap) => { if (snap.val()) document.getElementById('headerAvatar').src = snap.val(); });
-
-    window.takeMic = async function() {
-        if (!activeSeat) return;
-        const seatId = activeSeat.querySelector('.label').dataset.num || 'host';
-        if (seatsData[seatId]?.isLocked) return alert("সিট লক করা আছে!");
-        if (seatsData[seatId]?.userId && seatsData[seatId].userId !== userId) return alert("সিট দখল করা!");
-        if (userCurrentSeat) await releaseMic(true);
-        await joinAgoraChannel();
-        updateSeat(seatId, { userId, userName: 'MOHAJ', isLocked: false, isMuted: false });
+    function viewSeatProfile() {
+        const img = activeSeat.querySelector('.user-img');
+        const name = activeSeat.querySelector('.label').innerText;
+        document.getElementById('halfProfileImg').src = img ? img.src : 'https://via.placeholder.com/100';
+        document.getElementById('halfProfileName').innerText = name;
+        document.getElementById('halfProfileUid').innerText = '';
+        document.getElementById('halfProfileView').style.display = 'flex';
         closeAllMenus();
-    };
-
-    window.releaseMic = async function(isSwitching = false) {
-        if (!userCurrentSeat) return;
-        const seatId = userCurrentSeat.querySelector('.label').dataset.num || 'host';
-        updateSeat(seatId, { userId: null, isLocked: false, isMuted: false });
-        await leaveAgoraChannel();
-        if (!isSwitching) {
-            userCurrentSeat = null;
-            document.getElementById('bottom-profile').style.visibility = 'visible';
-        }
-        closeAllMenus();
-    };
-
-    window.toggleLock = function() {
-        if (!activeSeat) return;
-        const seatId = activeSeat.querySelector('.label').dataset.num || 'host';
-        const cur = seatsData[seatId] || { isLocked: false };
-        updateSeat(seatId, { ...cur, isLocked: !cur.isLocked });
-        closeAllMenus();
-    };
-
-    window.toggleMute = function() {
-        if (!userCurrentSeat) return;
-        isMuted = !isMuted;
-        const seatId = userCurrentSeat.querySelector('.label').dataset.num || 'host';
-        updateSeat(seatId, { userId, isLocked: seatsData[seatId]?.isLocked || false, isMuted });
-        toggleAgoraMute(isMuted);
-        closeAllMenus();
-    };
-
-    window.handleSeatClick = function(el) {
-        activeSeat = el;
-        const seatId = el.querySelector('.label').dataset.num || 'host';
-        document.getElementById('overlay').style.display = 'block';
-        document.querySelectorAll('.bottom-sheet').forEach(m => m.classList.remove('show'));
-        if (seatsData[seatId]?.userId === userId) {
-            document.getElementById('activeUserMenu').classList.add('show');
-        } else if (!seatsData[seatId]?.userId) {
-            document.getElementById('lText').innerText = seatsData[seatId]?.isLocked ? "মাইক আনলক করুন" : "মাইক লক করুন";
-            document.getElementById('emptySeatMenu').classList.add('show');
-        } else {
-            document.getElementById('activeUserMenu').classList.add('show');
-        }
-    };
-
-    window.sendGiftToSeat = function() {
-        giftTargetSeat = activeSeat;
-        closeAllMenus();
-        openGiftPanelForSeat(giftTargetSeat);
-    };
-
-    document.getElementById('giftTrigger').addEventListener('click', () => {
-        if (!userCurrentSeat) return alert('আগে সিটে বসুন।');
-        giftTargetSeat = userCurrentSeat;
-        document.getElementById('overlay').style.display = 'none';
-        openGiftPanelForSeat(giftTargetSeat);
-    });
-
-    function openGiftPanelForSeat(seat) {
-        const avatar = seat.querySelector('.user-img');
-        document.getElementById('giftTargetImg').src = avatar ? avatar.src : 'https://via.placeholder.com/70';
-        selectedGiftId = null;
-        renderGifts();
-        giftOverlayNew.classList.add('active');
     }
-
-    document.getElementById('emojiTrigger').addEventListener('click', () => {
-        document.querySelectorAll('.bottom-sheet').forEach(m => m.classList.remove('show'));
-        document.getElementById('emojiPanel').classList.add('show');
-        document.getElementById('overlay').style.display = 'block';
-    });
-
-    window.sendReaction = function(emoji) {
-        closeAllMenus();
-        const targ = userCurrentSeat?.querySelector('.circle') || document.getElementById('listenerAvatar');
-        if (!targ) return;
-        const fl = document.createElement('div');
-        fl.className = 'floating-emoji';
-        fl.textContent = emoji;
-        targ.style.position = 'relative';
-        targ.appendChild(fl);
-        fl.addEventListener('animationend', () => fl.remove());
-        push(emojiRef, { emoji, from: userId, timestamp: Date.now() });
-    };
-
-    const emojiList = ['😂', '❤️', '😍', '🔥', '😭', '😡', '👍', '🎉', '💔', '🤣', '😎', '🥳', '😇', '💋', '🙏'];
-    document.getElementById('emojiGrid').innerHTML = emojiList.map(e => `<div class="emoji-item" onclick="sendReaction('${e}')">${e}</div>`).join('');
-
-    document.getElementById('micTrigger').addEventListener('click', () => {
-        if (!userCurrentSeat) return alert('সিটে বসুন।');
-        document.querySelectorAll('.bottom-sheet').forEach(m => m.classList.remove('show'));
-        document.getElementById('micOptionIcon').textContent = isMuted ? '🎤' : '🔇';
-        document.getElementById('micOptionText').textContent = isMuted ? 'মাইক চালু করুন' : 'মাইক বন্ধ করুন';
-        document.getElementById('micPanel').classList.add('show');
-        document.getElementById('overlay').style.display = 'block';
-    });
-
-    window.closeAllMenus = () => {
-        document.querySelectorAll('.bottom-sheet').forEach(m => m.classList.remove('show'));
-        document.getElementById('overlay').style.display = 'none';
-    };
-
-    window.togglePage = (id, show) => document.getElementById(id).classList.toggle('active', show);
-
-    window.initCrop = function(e) {
+    function openTopicEditor() { document.getElementById('topic-editor').style.display='block'; }
+    function saveTopic() { const v = document.getElementById('topicInput').value; if(v) document.getElementById('displayTopic').innerText=v; document.getElementById('topic-editor').style.display='none'; }
+    let croppie = null;
+    function initCrop(e) {
         const reader = new FileReader();
         reader.onload = (ev) => {
             document.getElementById('cropper-container').style.display = 'block';
-            if (croppie) croppie.destroy();
+            if(croppie) croppie.destroy();
             croppie = new Croppie(document.getElementById('cropper-container'), {
                 viewport: { width: 100, height: 100, type: 'square' },
                 boundary: { width: 200, height: 200 }
@@ -600,38 +596,27 @@
             croppie.bind({ url: ev.target.result });
         };
         reader.readAsDataURL(e.target.files[0]);
-    };
-
-    window.applySettings = () => {
+    }
+    function applySettings() {
         const name = document.getElementById('gNameInput').value;
-        if (name) set(ref(db, `rooms/${ROOM_ID}/groupName`), name);
+        if (name) {
+            db.ref('roomInfo').update({ name });
+            document.getElementById('headerGroupName').innerText = name;
+        }
         if (croppie) {
             croppie.result('base64').then(img => {
-                set(ref(db, `rooms/${ROOM_ID}/groupAvatar`), img);
-                togglePage('settingsPage', false);
+                db.ref('roomInfo').update({ photoURL: img });
+                document.getElementById('headerAvatar').src = img;
             });
-        } else togglePage('settingsPage', false);
-    };
-
-    // সিট তৈরি ও ডিফল্ট ডাটা
-    const seatIds = ['host', 2,3,4,5,6,7,8,9,10];
-    document.getElementById('seatsContainer').innerHTML = seatIds.map(id => `
-        <div class="seat-item" onclick="handleSeatClick(this, '${id}')">
-            <div class="circle">🛋️<span class="lock-overlay">🔒</span><span class="mute-badge">🔇</span></div>
-            <div class="label" data-num="${id}">${id==='host'?'হোস্ট':id}</div>
-        </div>`).join('');
-
-    get(child(ref(db), `rooms/${ROOM_ID}/seats`)).then(snap => {
-        if (!snap.exists()) {
-            const init = {};
-            seatIds.forEach(s => init[s] = { userId: null, isLocked: false, isMuted: false });
-            set(seatsRef, init);
         }
-    });
-
-    updateCoinDisplay();
-    renderGifts();
+        togglePage('settingsPage', false);
+    }
+    function togglePage(id, show) { document.getElementById(id).classList.toggle('active', show); }
+    function closeAllMenus() {
+        document.querySelectorAll('.bottom-sheet').forEach(m => m.classList.remove('show'));
+        document.getElementById('overlay').style.display = 'none';
+    }
+    window.addEventListener('beforeunload', () => setMyPresence(false));
 </script>
 </body>
 </html>
-    giftOverlayNew.addEventListener('click', (e) => { if (e.target === giftOverlayNew) giftOverlayNew.classList.remove('active'); });
